@@ -40,3 +40,153 @@
 .read-the-docs {
   color: #888;
 }
+
+.App {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.App-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logout-button {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
+  text-align: center;
+}
+
+.google-signin-button {
+  padding: 12px 24px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.google-signin-button:hover {
+  background-color: #357abd;
+}
+
+.order-form {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+input, select {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+.order-items {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #f8f9fa;
+}
+
+h1, h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+h2 {
+  padding: 20px;
+  margin: 0;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 20px;
+  border-radius: 4px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.error-message p {
+  margin: 5px 0;
+}
+
+.error-message p:first-child {
+  font-weight: bold;
+  font-size: 1.2em;
+}
