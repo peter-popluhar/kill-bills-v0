@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Tab, Tabs } from '@mui/material';
+import { Box, Tab, Tabs, Badge } from '@mui/material';
 import { OrderManagement } from './OrderManagement';
 import { Archive } from './Archive';
+import { useArchiveManagement } from '../hooks/useArchiveManagement';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -38,6 +39,7 @@ function a11yProps(index: number) {
 
 export const TabLayout: React.FC = () => {
   const [value, setValue] = useState(0);
+  const { archivedOrders } = useArchiveManagement();
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -51,9 +53,32 @@ export const TabLayout: React.FC = () => {
           onChange={handleChange} 
           aria-label="basic tabs example"
           sx={{ backgroundColor: 'white' }}
+          variant='fullWidth' 
+          color="primary"
+          centered
         >
           <Tab label="Orders" {...a11yProps(0)} />
-          <Tab label="Archive" {...a11yProps(1)} />
+          <Tab 
+            label={
+              <Badge 
+                badgeContent={archivedOrders?.length || 0} 
+                color="primary"
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right'
+                }}
+                sx={{ 
+                  '& .MuiBadge-badge': { 
+                    display: archivedOrders?.length ? 'block' : 'none',
+                    position: 'relative',
+                  }
+                }}
+              >
+                Archive
+              </Badge>
+            } 
+            {...a11yProps(1)} 
+          />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
