@@ -1,17 +1,11 @@
-export interface ArchivedOrderItem {
-  itemName: string;
-  itemInitialPrice: number;
-  itemCalculatedAmount: number;
-  itemCalculatedPrice: number;
-  currency: string;
-}
+import { OrderItem } from './OrderItem';
 
 export interface ArchivedOrder {
-  archiveId: string;
+  id: string;
   date: string;
-  time: string;
   location: string;
-  items: ArchivedOrderItem[];
-  totalsByCurrency: { [key: string]: number };
-  user: string;
+  items: OrderItem[];
+  totalsByCurrency: {
+    [key: string]: number;
+  };
 } 

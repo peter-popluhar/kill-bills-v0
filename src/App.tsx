@@ -1,8 +1,8 @@
+import React from 'react';
+import { TabLayout } from './components/TabLayout';
+import { Container, AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
-import { OrderManagement } from './components/OrderManagement';
-import { ArchiveManagement } from './components/ArchiveManagement';
-import './App.css';
 
 function App() {
   const { user, logout, isAuthorized } = useAuth();
@@ -12,20 +12,26 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Kill Bills</h1>
-        <div className="user-info">
-          <span>Welcome, {user.email}</span>
-          <button onClick={logout} className="logout-button">
-            Logout
-          </button>
-        </div>
-      </header>
-      
-      <OrderManagement />
-      <ArchiveManagement />
-    </div>
+    <>
+      <AppBar position="static" sx={{ mb: 3 }}>
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Kill Bills
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body1">
+              Welcome, {user.email}
+            </Typography>
+            <Button color="inherit" onClick={logout}>
+              Logout
+            </Button>
+          </Box>
+        </Toolbar>
+      </AppBar>
+      <Container maxWidth="lg">
+        <TabLayout />
+      </Container>
+    </>
   );
 }
 
