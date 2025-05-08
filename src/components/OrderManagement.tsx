@@ -141,6 +141,45 @@ export const OrderManagement: React.FC = () => {
     });
   };
 
+  const handleArchiveOrder = () => {
+    if (!user || !isAuthorized || !orderItems.length) return;
+
+    // Create a reference to the archive collection and get a new key
+    const archiveRef = ref(database, 'archive');
+    const newArchiveRef = push(archiveRef);
+
+    // Create the archived order object
+    const archivedOrder = {
+      archiveId: newArchiveRef.key,
+      date: orderItems[0].currentDate,
+      time: orderItems[0].currentTime,
+      location: orderItems[0].billLocation,
+      items: orderItems.map(item => ({
+        itemName: item.itemName,
+        itemInitialPrice: item.itemInitialPrice,
+        itemCalculatedAmount: item.itemCalculatedAmount,
+        itemCalculatedPrice: item.itemCalculatedPrice,
+        currency: item.currency
+      })),
+      user: user.email,
+      totalsByCurrency: orderItems.reduce((acc, item) => {
+        const currency = item.currency;
+        acc[currency] = (acc[currency] || 0) + item.itemCalculatedPrice;
+        return acc;
+      }, {} as { [key: string]: number })
+    };
+
+    // Add the archived order using the generated key
+    set(newArchiveRef, archivedOrder)
+      .then(() => {
+        // After successful archiving, delete the current order
+        handleDeleteOrder();
+      })
+      .catch((error) => {
+        console.error('Error archiving order:', error);
+      });
+  };
+
   const calculateSummary = () => {
     if (!orderItems.length) return { totalAmount: 0, itemCount: 0, lastOrder: null, billLocation: '' };
 
@@ -266,6 +305,7 @@ export const OrderManagement: React.FC = () => {
                 Delete Order
               </button>
               <button 
+                onClick={handleArchiveOrder}
                 className="action-button"
               >
                 Archive Order

@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
 import { OrderManagement } from './components/OrderManagement';
+import { ArchiveManagement } from './components/ArchiveManagement';
 import './App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
       </header>
       
       <OrderManagement />
+      <ArchiveManagement />
     </div>
   );
 }
