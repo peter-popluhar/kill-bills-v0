@@ -73,6 +73,7 @@ export const OrderManagement: React.FC = () => {
               label="Item Name"
               required
               size="small"
+              variant='standard'
             />
           </Box>
           <Box sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: 'calc(25% - 16px)' } }}>
@@ -83,6 +84,7 @@ export const OrderManagement: React.FC = () => {
               label="Price"
               required
               size="small"
+              variant='standard'
             />
           </Box>
           <Box sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: 'calc(25% - 16px)' } }}>
@@ -92,6 +94,7 @@ export const OrderManagement: React.FC = () => {
                 name="currency"
                 defaultValue="CZK"
                 label="Currency"
+                variant='standard'
               >
                 <MenuItem value="CZK">CZK</MenuItem>
                 <MenuItem value="EUR">EUR</MenuItem>
