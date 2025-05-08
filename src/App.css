@@ -190,3 +190,154 @@ h2 {
   font-weight: bold;
   font-size: 1.2em;
 }
+
+.order-items td {
+  padding: 10px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.order-items td input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.order-items td button {
+  padding: 5px 10px;
+  margin: 0 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.order-items td button:hover {
+  background-color: #e9ecef;
+}
+
+.order-items td span {
+  cursor: pointer;
+  padding: 5px;
+  display: block;
+}
+
+.order-items td span:hover {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.actions button {
+  margin: 0 5px;
+}
+
+.delete-button {
+  background-color: #dc3545 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.delete-button:hover {
+  background-color: #c82333 !important;
+}
+
+.summary-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+}
+
+.summary-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.summary-actions button {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.action-button {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  background-color: #5a6268;
+}
+
+.action-button:disabled,
+.delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.summary-label {
+  font-size: 0.9em;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+.summary-value {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #212529;
+}
+
+.location-value {
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.location-value:hover {
+  background-color: #e9ecef;
+}
+
+.location-input {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1.2em;
+  color: #212529;
+}
+
+.location-input:focus {
+  outline: none;
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
