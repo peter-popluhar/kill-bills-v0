@@ -12,12 +12,15 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
-import { useArchive } from '../hooks/useArchive';
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import { useArchiveManagement } from '../hooks/useArchiveManagement';
 import { ArchivedOrder } from '../types/ArchivedOrder';
 
 export const Archive: React.FC = () => {
-  const { archivedOrders, isLoading, error } = useArchive();
+  const { archivedOrders, isLoading, error, handleDeleteArchive } = useArchiveManagement();
 
   if (isLoading) {
     return (
@@ -48,6 +51,17 @@ export const Archive: React.FC = () => {
 
   return (
     <Stack spacing={3}>
+      <Box display="flex" justifyContent="flex-end">
+        <Tooltip title="Delete all archives">
+          <IconButton
+            onClick={handleDeleteArchive}
+            color="error"
+            size="large"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
