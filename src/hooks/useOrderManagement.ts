@@ -1,0 +1,235 @@
+import { useState } from 'react';
+import { database } from '../firebase';
+import { ref, push, set } from 'firebase/database';
+import { OrderItem } from '../types/OrderItem';
+import { useAuth } from '../contexts/AuthContext';
+import { useFirebaseCollection } from './useFirebaseCollection';
+import { useLoadingError } from './useLoadingError';
+
+interface NewOrderItem {
+  itemName?: string;
+  itemInitialPrice?: number;
+  currency: string;
+  itemCalculatedAmount: number;
+  itemInitialAmount: number;
+}
+
+interface OrderSummary {
+  totalsByCurrency: { [key: string]: number };
+  itemCount: number;
+  lastOrder: OrderItem | null;
+  billLocation: string;
+}
+
+export interface UseOrderManagementReturn {
+  orderItems: OrderItem[];
+  newItem: NewOrderItem;
+  editingItem: string | null;
+  editingLocation: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  summary: OrderSummary;
+  handlers: {
+    handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+    handleUpdateItem: (itemId: string, updates: Partial<OrderItem>) => void;
+    handleIncrementAmount: (item: OrderItem) => void;
+    handleDecrementAmount: (item: OrderItem) => void;
+    handleNameChange: (item: OrderItem, newName: string) => void;
+    handlePriceChange: (item: OrderItem, newPrice: number) => void;
+    handleLocationChange: (newLocation: string) => void;
+    handleDeleteItem: (itemId: string) => void;
+    handleDeleteOrder: () => void;
+    handleArchiveOrder: () => void;
+    setEditingItem: (id: string | null) => void;
+    setEditingLocation: (isEditing: boolean) => void;
+    setNewItem: (item: Partial<NewOrderItem>) => void;
+  };
+}
+
+export function useOrderManagement(): UseOrderManagementReturn {
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [newItem, setNewItem] = useState<NewOrderItem>({
+    currency: 'CZK',
+    itemCalculatedAmount: 1,
+    itemInitialAmount: 1,
+  });
+
+  const { user, isAuthorized } = useAuth();
+  const { setError } = useLoadingError();
+
+  const {
+    data: orderItems,
+    isLoading,
+    error,
+    actions: { update: updateItem, remove: removeItem, removeAll }
+  } = useFirebaseCollection<OrderItem>({
+    collectionPath: 'orderItems'
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user || !isAuthorized || !newItem.itemName) return;
+
+    const itemsRef = ref(database, 'orderItems');
+    const newItemRef = push(itemsRef);
+    
+    const now = new Date();
+    const currentDate = now.toLocaleDateString();
+    const currentTime = now.toLocaleTimeString();
+
+    const currentBillLocation = orderItems.length > 0 ? orderItems[0].billLocation : '';
+
+    set(newItemRef, {
+      ...newItem,
+      currentDate,
+      currentTime,
+      user: user.email,
+      billLocation: currentBillLocation,
+      itemCalculatedPrice: newItem.itemInitialPrice,
+    }).catch((error) => {
+      setError(error instanceof Error ? error : new Error('Error adding new item'));
+    });
+
+    setNewItem({
+      currency: 'CZK',
+      itemCalculatedAmount: 1,
+      itemInitialAmount: 1,
+    });
+  };
+
+  const handleIncrementAmount = (item: OrderItem) => {
+    const newAmount = (item.itemCalculatedAmount || 0) + 1;
+    updateItem(item.id!, {
+      itemCalculatedAmount: newAmount,
+      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount
+    });
+  };
+
+  const handleDecrementAmount = (item: OrderItem) => {
+    if (item.itemCalculatedAmount <= 1) return;
+    const newAmount = item.itemCalculatedAmount - 1;
+    updateItem(item.id!, {
+      itemCalculatedAmount: newAmount,
+      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount
+    });
+  };
+
+  const handleNameChange = (item: OrderItem, newName: string) => {
+    updateItem(item.id!, { itemName: newName });
+    setEditingItem(null);
+  };
+
+  const handlePriceChange = (item: OrderItem, newPrice: number) => {
+    updateItem(item.id!, {
+      itemInitialPrice: newPrice,
+      itemCalculatedPrice: newPrice * (item.itemCalculatedAmount || 1)
+    });
+    setEditingItem(null);
+  };
+
+  const handleLocationChange = (newLocation: string) => {
+    if (!user || !isAuthorized) return;
+
+    const updates = orderItems.reduce((acc, item) => ({
+      ...acc,
+      [`orderItems/${item.id}/billLocation`]: newLocation
+    }), {});
+
+    const itemsRef = ref(database, '');
+    set(itemsRef, updates).catch((error) => {
+      setError(error instanceof Error ? error : new Error('Error updating location'));
+    });
+    setEditingLocation(false);
+  };
+
+  const handleArchiveOrder = async () => {
+    if (!user || !isAuthorized || !orderItems.length) return;
+
+    const archiveRef = ref(database, 'archive');
+    const newArchiveRef = push(archiveRef);
+
+    const archivedOrder = {
+      archiveId: newArchiveRef.key,
+      date: orderItems[0].currentDate,
+      time: orderItems[0].currentTime,
+      location: orderItems[0].billLocation,
+      items: orderItems.map(item => ({
+        itemName: item.itemName,
+        itemInitialPrice: item.itemInitialPrice,
+        itemCalculatedAmount: item.itemCalculatedAmount,
+        itemCalculatedPrice: item.itemCalculatedPrice,
+        currency: item.currency
+      })),
+      user: user.email,
+      totalsByCurrency: orderItems.reduce((acc, item) => {
+        const currency = item.currency;
+        acc[currency] = (acc[currency] || 0) + item.itemCalculatedPrice;
+        return acc;
+      }, {} as { [key: string]: number })
+    };
+
+    try {
+      await set(newArchiveRef, archivedOrder);
+      await removeAll();
+    } catch (error) {
+      setError(error instanceof Error ? error : new Error('Error archiving order'));
+    }
+  };
+
+  const calculateSummary = (): OrderSummary => {
+    if (!orderItems.length) {
+      return {
+        totalsByCurrency: {},
+        itemCount: 0,
+        lastOrder: null,
+        billLocation: ''
+      };
+    }
+
+    const itemCount = orderItems.length;
+    const lastOrder = orderItems.reduce((latest, current) => {
+      const latestDate = new Date(`${latest.currentDate} ${latest.currentTime}`);
+      const currentDate = new Date(`${current.currentDate} ${current.currentTime}`);
+      return currentDate > latestDate ? current : latest;
+    }, orderItems[0]);
+
+    const totalsByCurrency = orderItems.reduce((acc, item) => {
+      const currency = item.currency;
+      acc[currency] = (acc[currency] || 0) + item.itemCalculatedPrice;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    return {
+      totalsByCurrency,
+      itemCount,
+      lastOrder,
+      billLocation: orderItems[0]?.billLocation || ''
+    };
+  };
+
+  return {
+    orderItems,
+    newItem,
+    editingItem,
+    editingLocation,
+    isLoading,
+    error,
+    summary: calculateSummary(),
+    handlers: {
+      handleSubmit,
+      handleUpdateItem: updateItem,
+      handleIncrementAmount,
+      handleDecrementAmount,
+      handleNameChange,
+      handlePriceChange,
+      handleLocationChange,
+      handleDeleteItem: removeItem,
+      handleDeleteOrder: removeAll,
+      handleArchiveOrder,
+      setEditingItem,
+      setEditingLocation,
+      setNewItem: (item: Partial<NewOrderItem>) => setNewItem({ ...newItem, ...item }),
+    }
+  };
+} 

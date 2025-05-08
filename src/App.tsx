@@ -12,6 +12,8 @@ function App() {
     return <Login />;
   }
 
+  console.log('test app')
+
   return (
     <div className="App">
       <header className="App-header">

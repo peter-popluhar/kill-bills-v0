@@ -177,7 +177,7 @@ h2 {
   background-color: #f8d7da;
   color: #721c24;
   padding: 20px;
-  border-radius: 4px;
+  border-radius: 8px;
   margin-top: 20px;
   text-align: center;
 }
@@ -466,4 +466,14 @@ h2 {
   font-weight: 600;
   color: #212529;
   text-align: right;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+  font-size: 1.2em;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 20px;
 }
