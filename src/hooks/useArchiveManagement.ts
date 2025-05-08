@@ -1,6 +1,6 @@
 import { ArchivedOrder } from '../types/ArchivedOrder';
 import { useFirebaseCollection } from './useFirebaseCollection';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 export interface UseArchiveManagementReturn {
   archivedOrders: ArchivedOrder[];

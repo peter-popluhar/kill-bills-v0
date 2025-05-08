@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
 import { OrderManagement } from './components/OrderManagement';
@@ -11,8 +10,6 @@ function App() {
   if (!user || !isAuthorized) {
     return <Login />;
   }
-
-  console.log('test app')
 
   return (
     <div className="App">

@@ -1,18 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { database } from '../firebase';
 import { ref, push, set } from 'firebase/database';
 import { OrderItem } from '../types/OrderItem';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirebaseCollection } from './useFirebaseCollection';
 import { useLoadingError } from './useLoadingError';
-
-interface NewOrderItem {
-  itemName?: string;
-  itemInitialPrice?: number;
-  currency: string;
-  itemCalculatedAmount: number;
-  itemInitialAmount: number;
-}
 
 interface OrderSummary {
   totalsByCurrency: { [key: string]: number };
@@ -23,7 +15,6 @@ interface OrderSummary {
 
 export interface UseOrderManagementReturn {
   orderItems: OrderItem[];
-  newItem: NewOrderItem;
   editingItem: string | null;
   editingLocation: boolean;
   isLoading: boolean;
@@ -42,18 +33,14 @@ export interface UseOrderManagementReturn {
     handleArchiveOrder: () => void;
     setEditingItem: (id: string | null) => void;
     setEditingLocation: (isEditing: boolean) => void;
-    setNewItem: (item: Partial<NewOrderItem>) => void;
+    resetForm: () => void;
   };
 }
 
 export function useOrderManagement(): UseOrderManagementReturn {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editingLocation, setEditingLocation] = useState(false);
-  const [newItem, setNewItem] = useState<NewOrderItem>({
-    currency: 'CZK',
-    itemCalculatedAmount: 1,
-    itemInitialAmount: 1,
-  });
+  const formRef = useRef<HTMLFormElement>(null);
 
   const { user, isAuthorized } = useAuth();
   const { setError } = useLoadingError();
@@ -67,9 +54,27 @@ export function useOrderManagement(): UseOrderManagementReturn {
     collectionPath: 'orderItems'
   });
 
+  const resetForm = () => {
+    if (formRef.current) {
+      formRef.current.reset();
+      const currencySelect = formRef.current.querySelector('select[name="currency"]') as HTMLSelectElement;
+      if (currencySelect) {
+        currencySelect.value = 'CZK';
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !isAuthorized || !newItem.itemName) return;
+    if (!user || !isAuthorized) return;
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const itemName = formData.get('itemName') as string;
+    const itemInitialPrice = Number(formData.get('itemInitialPrice'));
+    const currency = formData.get('currency') as string;
+
+    if (!itemName || !itemInitialPrice) return;
 
     const itemsRef = ref(database, 'orderItems');
     const newItemRef = push(itemsRef);
@@ -81,20 +86,23 @@ export function useOrderManagement(): UseOrderManagementReturn {
     const currentBillLocation = orderItems.length > 0 ? orderItems[0].billLocation : '';
 
     set(newItemRef, {
-      ...newItem,
+      itemName,
+      itemInitialPrice,
+      currency,
+      itemCalculatedAmount: 1,
+      itemCalculatedPrice: itemInitialPrice,
       currentDate,
       currentTime,
       user: user.email,
       billLocation: currentBillLocation,
-      itemCalculatedPrice: newItem.itemInitialPrice,
+    }).then(() => {
+      form.reset();
+      const currencySelect = form.querySelector('select[name="currency"]') as HTMLSelectElement;
+      if (currencySelect) {
+        currencySelect.value = 'CZK';
+      }
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error adding new item'));
-    });
-
-    setNewItem({
-      currency: 'CZK',
-      itemCalculatedAmount: 1,
-      itemInitialAmount: 1,
     });
   };
 
@@ -210,7 +218,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
   return {
     orderItems,
-    newItem,
     editingItem,
     editingLocation,
     isLoading,
@@ -229,7 +236,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
       handleArchiveOrder,
       setEditingItem,
       setEditingLocation,
-      setNewItem: (item: Partial<NewOrderItem>) => setNewItem({ ...newItem, ...item }),
+      resetForm
     }
   };
 } 

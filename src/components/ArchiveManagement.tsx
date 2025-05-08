@@ -1,8 +1,7 @@
-import React, { memo } from 'react';
 import { useArchiveManagement } from '../hooks/useArchiveManagement';
 import { ArchivedOrder } from '../types/ArchivedOrder';
 
-const ArchiveCard = memo(({ order }: { order: ArchivedOrder }) => (
+const ArchiveCard = ({ order }: { order: ArchivedOrder }) => (
   <div className="archive-card">
     <div className="archive-card-header">
       <div className="archive-card-date">
@@ -35,11 +34,9 @@ const ArchiveCard = memo(({ order }: { order: ArchivedOrder }) => (
       </div>
     </div>
   </div>
-));
+);
 
-ArchiveCard.displayName = 'ArchiveCard';
-
-const ArchiveHeader = memo(({ onDelete }: { onDelete: () => void }) => (
+const ArchiveHeader = ({ onDelete }: { onDelete: () => void }) => (
   <div className="archive-header">
     <h2>Archived Orders</h2>
     <button 
@@ -49,11 +46,9 @@ const ArchiveHeader = memo(({ onDelete }: { onDelete: () => void }) => (
       Delete All Archives
     </button>
   </div>
-));
+);
 
-ArchiveHeader.displayName = 'ArchiveHeader';
-
-export const ArchiveManagement = memo(() => {
+export const ArchiveManagement = () => {
   const { archivedOrders, isLoading, error, handleDeleteArchive } = useArchiveManagement();
 
   if (isLoading) {
@@ -83,6 +78,4 @@ export const ArchiveManagement = memo(() => {
       </div>
     </div>
   );
-});
-
-ArchiveManagement.displayName = 'ArchiveManagement'; 
+}; 

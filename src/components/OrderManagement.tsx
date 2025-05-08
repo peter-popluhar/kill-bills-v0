@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useOrderManagement } from '../hooks/useOrderManagement';
-import { OrderItem } from '../types/OrderItem';
+import { orderFormService } from '../services/orderFormService';
 
 export const OrderManagement: React.FC = () => {
+  const formRef = useRef<HTMLFormElement>(null);
   const {
     orderItems,
-    newItem,
     editingItem,
     editingLocation,
     isLoading,
@@ -27,30 +27,23 @@ export const OrderManagement: React.FC = () => {
     );
   }
 
-  console.log('test orders')
-
   return (
     <div>
-      <form onSubmit={handlers.handleSubmit} className="order-form">
+      <form ref={formRef} onSubmit={handlers.handleSubmit} className="order-form">
         <div className="form-group">
           <input
             type="text"
-            value={newItem.itemName || ''}
-            onChange={(e) => handlers.setNewItem({ itemName: e.target.value })}
+            name="itemName"
             placeholder="Item Name"
             required
           />
           <input
             type="number"
-            value={newItem.itemInitialPrice || ''}
-            onChange={(e) => handlers.setNewItem({ itemInitialPrice: Number(e.target.value) })}
+            name="itemInitialPrice"
             placeholder="Price"
             required
           />
-          <select
-            value={newItem.currency}
-            onChange={(e) => handlers.setNewItem({ currency: e.target.value })}
-          >
+          <select name="currency" defaultValue="CZK">
             <option value="CZK">CZK</option>
             <option value="EUR">EUR</option>
             <option value="USD">USD</option>
@@ -73,18 +66,15 @@ export const OrderManagement: React.FC = () => {
               <div className="summary-item">
                 <span className="summary-label">Bill Location:</span>
                 {editingLocation ? (
-                  <input
-                    type="text"
-                    className="location-input"
-                    defaultValue={summary.billLocation}
-                    onBlur={(e) => handlers.handleLocationChange(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handlers.handleLocationChange(e.currentTarget.value);
-                      }
-                    }}
-                    autoFocus
-                  />
+                  <form onSubmit={(e) => orderFormService.handleLocationSubmit(e, handlers.handleLocationChange)}>
+                    <input
+                      type="text"
+                      name="location"
+                      className="location-input"
+                      defaultValue={summary.billLocation}
+                      autoFocus
+                    />
+                  </form>
                 ) : (
                   <span 
                     className="summary-value location-value" 
@@ -98,7 +88,7 @@ export const OrderManagement: React.FC = () => {
               {Object.entries(summary.totalsByCurrency).map(([currency, total]) => (
                 <div key={currency} className="summary-item">
                   <span className="summary-label">Total ({currency}):</span>
-                  <span className="summary-value">{total.toFixed(2)}</span>
+                  <span className="summary-value">{Number(total).toFixed(2)}</span>
                 </div>
               ))}
               
@@ -147,21 +137,18 @@ export const OrderManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {orderItems.map((item: OrderItem) => (
+              {orderItems.map((item) => (
                 <tr key={item.id}>
                   <td>
                     {editingItem === `${item.id}-name` ? (
-                      <input
-                        type="text"
-                        defaultValue={item.itemName}
-                        onBlur={(e) => handlers.handleNameChange(item, e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handlers.handleNameChange(item, e.currentTarget.value);
-                          }
-                        }}
-                        autoFocus
-                      />
+                      <form onSubmit={(e) => orderFormService.handleNameSubmit(e, item, handlers.handleNameChange)}>
+                        <input
+                          type="text"
+                          name="name"
+                          defaultValue={item.itemName}
+                          autoFocus
+                        />
+                      </form>
                     ) : (
                       <span onClick={() => handlers.setEditingItem(`${item.id}-name`)}>
                         {item.itemName}
@@ -170,17 +157,14 @@ export const OrderManagement: React.FC = () => {
                   </td>
                   <td>
                     {editingItem === `${item.id}-price` ? (
-                      <input
-                        type="number"
-                        defaultValue={item.itemInitialPrice}
-                        onBlur={(e) => handlers.handlePriceChange(item, Number(e.target.value))}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handlers.handlePriceChange(item, Number(e.currentTarget.value));
-                          }
-                        }}
-                        autoFocus
-                      />
+                      <form onSubmit={(e) => orderFormService.handlePriceSubmit(e, item, handlers.handlePriceChange)}>
+                        <input
+                          type="number"
+                          name="price"
+                          defaultValue={item.itemInitialPrice}
+                          autoFocus
+                        />
+                      </form>
                     ) : (
                       <span onClick={() => handlers.setEditingItem(`${item.id}-price`)}>
                         {item.itemInitialPrice}
