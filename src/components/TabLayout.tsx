@@ -35,6 +35,53 @@ function a11yProps(index: number) {
   };
 }
 
+interface ToolbarProps {
+  value: number;
+  onChange: (event: React.SyntheticEvent, newValue: number) => void;
+}
+
+export const Toolbar: React.FC<ToolbarProps> = ({ value, onChange }) => {
+  const { archivedOrders } = useArchiveManagement();
+
+  return (
+    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Tabs 
+        value={value} 
+        onChange={onChange}
+        aria-label="basic tabs example"
+        sx={{ backgroundColor: 'white' }}
+        variant='fullWidth' 
+        color="primary"
+        centered
+      >
+        <Tab label="Orders" {...a11yProps(0)} />
+        <Tab 
+          label={
+            <Badge 
+              badgeContent={archivedOrders?.length || 0} 
+              color="primary"
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right'
+              }}
+              sx={{ 
+                '& .MuiBadge-badge': { 
+                  display: archivedOrders?.length ? 'block' : 'none',
+                  position: 'relative',
+                }
+              }}
+            >
+              Archive
+            </Badge>
+          } 
+          {...a11yProps(1)} 
+        />
+        <Tab label="Settings" {...a11yProps(2)} />
+      </Tabs>
+    </Box>
+  );
+};
+
 export const TabLayout: React.FC = () => {
   const [value, setValue] = useState(0);
   const { archivedOrders } = useArchiveManagement();
@@ -45,45 +92,15 @@ export const TabLayout: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={value} 
-          onChange={handleChange} 
-          aria-label="basic tabs example"
-          sx={{ backgroundColor: 'white' }}
-          variant='fullWidth' 
-          color="primary"
-          centered
-        >
-          <Tab label="Orders" {...a11yProps(0)} />
-          <Tab 
-            label={
-              <Badge 
-                badgeContent={archivedOrders?.length || 0} 
-                color="primary"
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right'
-                }}
-                sx={{ 
-                  '& .MuiBadge-badge': { 
-                    display: archivedOrders?.length ? 'block' : 'none',
-                    position: 'relative',
-                  }
-                }}
-              >
-                Archive
-              </Badge>
-            } 
-            {...a11yProps(1)} 
-          />
-        </Tabs>
-      </Box>
+      <Toolbar value={value} onChange={handleChange} />
       <TabPanel value={value} index={0}>
         <OrderManagement />
       </TabPanel>
       <TabPanel value={value} index={1}>
         <Archive />
+      </TabPanel>
+      <TabPanel value={value} index={2}>
+        {/* Settings tab content (empty for now) */}
       </TabPanel>
     </Box>
   );
