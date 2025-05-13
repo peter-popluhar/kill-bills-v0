@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Box, Tab, Tabs, Badge } from '@mui/material';
+import { Box, Tab, Tabs, Badge, RadioGroup, FormControlLabel, Radio, FormLabel, FormControl } from '@mui/material';
 import { OrderManagement } from './OrderManagement';
 import { Archive } from './Archive';
 import { useArchiveManagement } from '../hooks/useArchiveManagement';
+import { useThemeMode } from '../contexts/ThemeModeContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -49,7 +50,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ value, onChange }) => {
         value={value} 
         onChange={onChange}
         aria-label="basic tabs example"
-        sx={{ backgroundColor: 'white' }}
         variant='fullWidth' 
         color="primary"
         centered
@@ -84,7 +84,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ value, onChange }) => {
 
 export const TabLayout: React.FC = () => {
   const [value, setValue] = useState(0);
-  const { archivedOrders } = useArchiveManagement();
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -100,8 +99,27 @@ export const TabLayout: React.FC = () => {
         <Archive />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        {/* Settings tab content (empty for now) */}
+        <SettingsThemeSwitcher />
       </TabPanel>
     </Box>
+  );
+};
+
+const SettingsThemeSwitcher: React.FC = () => {
+  const { mode, setMode } = useThemeMode();
+  return (
+    <FormControl component="fieldset">
+      <FormLabel component="legend">Theme</FormLabel>
+      <RadioGroup
+        row
+        value={mode}
+        onChange={e => setMode(e.target.value as 'system' | 'light' | 'dark')}
+        name="theme-mode"
+      >
+        <FormControlLabel value="system" control={<Radio />} label="System" />
+        <FormControlLabel value="light" control={<Radio />} label="Light" />
+        <FormControlLabel value="dark" control={<Radio />} label="Dark" />
+      </RadioGroup>
+    </FormControl>
   );
 }; 
