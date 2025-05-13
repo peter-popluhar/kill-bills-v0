@@ -4,6 +4,7 @@ import { OrderManagement } from './OrderManagement';
 import { Archive } from './Archive';
 import { useArchiveManagement } from '../hooks/useArchiveManagement';
 import { useThemeMode } from '../contexts/ThemeModeContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -100,6 +101,7 @@ export const TabLayout: React.FC = () => {
       </TabPanel>
       <TabPanel value={value} index={2}>
         <SettingsThemeSwitcher />
+        <SettingsCurrencySwitcher />
       </TabPanel>
     </Box>
   );
@@ -119,6 +121,24 @@ const SettingsThemeSwitcher: React.FC = () => {
         <FormControlLabel value="system" control={<Radio />} label="System" />
         <FormControlLabel value="light" control={<Radio />} label="Light" />
         <FormControlLabel value="dark" control={<Radio />} label="Dark" />
+      </RadioGroup>
+    </FormControl>
+  );
+};
+
+const SettingsCurrencySwitcher: React.FC = () => {
+  const { currency, setCurrency } = useCurrency();
+  return (
+    <FormControl component="fieldset" sx={{ mt: 4 }}>
+      <FormLabel component="legend">Currency</FormLabel>
+      <RadioGroup
+        row
+        value={currency}
+        onChange={e => setCurrency(e.target.value as 'CZK' | 'EUR')}
+        name="currency-mode"
+      >
+        <FormControlLabel value="CZK" control={<Radio />} label="CZK" />
+        <FormControlLabel value="EUR" control={<Radio />} label="EUR" />
       </RadioGroup>
     </FormControl>
   );

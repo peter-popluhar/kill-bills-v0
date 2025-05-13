@@ -5,6 +5,7 @@ import { OrderItem } from '../types/OrderItem';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirebaseCollection } from './useFirebaseCollection';
 import { useLoadingError } from './useLoadingError';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 interface OrderSummary {
   totalsByCurrency: { [key: string]: number };
@@ -44,6 +45,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
   const { user, isAuthorized } = useAuth();
   const { setError } = useLoadingError();
+  const { currency } = useCurrency();
 
   const {
     data: orderItems,
@@ -72,7 +74,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     const formData = new FormData(form);
     const itemName = formData.get('itemName') as string;
     const itemInitialPrice = Number(formData.get('itemInitialPrice'));
-    const currency = formData.get('currency') as string;
 
     if (!itemName || !itemInitialPrice) return;
 
@@ -88,7 +89,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     set(newItemRef, {
       itemName,
       itemInitialPrice,
-      currency,
       itemCalculatedAmount: 1,
       itemCalculatedPrice: itemInitialPrice,
       currentDate,
@@ -97,10 +97,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
       billLocation: currentBillLocation,
     }).then(() => {
       form.reset();
-      const currencySelect = form.querySelector('select[name="currency"]') as HTMLSelectElement;
-      if (currencySelect) {
-        currencySelect.value = 'CZK';
-      }
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error adding new item'));
     });
@@ -167,11 +163,10 @@ export function useOrderManagement(): UseOrderManagementReturn {
         itemInitialPrice: item.itemInitialPrice,
         itemCalculatedAmount: item.itemCalculatedAmount,
         itemCalculatedPrice: item.itemCalculatedPrice,
-        currency: item.currency
+        currency
       })),
       user: user.email,
       totalsByCurrency: orderItems.reduce((acc, item) => {
-        const currency = item.currency;
         acc[currency] = (acc[currency] || 0) + item.itemCalculatedPrice;
         return acc;
       }, {} as { [key: string]: number })
@@ -202,11 +197,9 @@ export function useOrderManagement(): UseOrderManagementReturn {
       return currentDate > latestDate ? current : latest;
     }, orderItems[0]);
 
-    const totalsByCurrency = orderItems.reduce((acc, item) => {
-      const currency = item.currency;
-      acc[currency] = (acc[currency] || 0) + item.itemCalculatedPrice;
-      return acc;
-    }, {} as { [key: string]: number });
+    const totalsByCurrency = {
+      [currency]: orderItems.reduce((acc, item) => acc + item.itemCalculatedPrice, 0)
+    };
 
     return {
       totalsByCurrency,
