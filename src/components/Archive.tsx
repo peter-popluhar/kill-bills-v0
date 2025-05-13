@@ -62,50 +62,44 @@ export const Archive: React.FC = () => {
           </IconButton>
         </Tooltip>
       </Box>
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Items</TableCell>
-              <TableCell>Total</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {archivedOrders.map((order: ArchivedOrder) => (
-              <TableRow key={order.id}>
-                <TableCell>
-                  <Typography variant="body2">
-                    {order.date}
+      {archivedOrders.map((order: ArchivedOrder) => (
+        <Paper key={order.id} sx={{ p: 2, mb: 2 }}>
+          <Stack spacing={2}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="subtitle2" color="text.secondary">
+                {order.date}
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                {order.location}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                Items
+              </Typography>
+              <Stack spacing={0.5}>
+                {order.items?.map((item, index) => (
+                  <Typography key={index} variant="body2">
+                    {item.itemName} ({item.itemCalculatedAmount}x {item.itemInitialPrice} {item.currency})
                   </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {order.location}
+                ))}
+              </Stack>
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
+                Total
+              </Typography>
+              <Stack spacing={0.5}>
+                {order.totalsByCurrency && Object.entries(order.totalsByCurrency).map(([currency, total]) => (
+                  <Typography key={currency} variant="body2">
+                    {Number(total).toFixed(2)} {currency}
                   </Typography>
-                </TableCell>
-                <TableCell>
-                  <Stack spacing={1}>
-                    {order.items?.map((item, index) => (
-                      <Typography key={index} variant="body2">
-                        {item.itemName} ({item.itemCalculatedAmount}x {item.itemInitialPrice} {item.currency})
-                      </Typography>
-                    ))}
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  {order.totalsByCurrency && Object.entries(order.totalsByCurrency).map(([currency, total]) => (
-                    <Typography key={currency} variant="body2">
-                      {Number(total).toFixed(2)} {currency}
-                    </Typography>
-                  ))}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                ))}
+              </Stack>
+            </Box>
+          </Stack>
+        </Paper>
+      ))}
     </Stack>
   );
 }; 

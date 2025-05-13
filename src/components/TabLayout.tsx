@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Tab, Tabs, Badge, RadioGroup, FormControlLabel, Radio, FormLabel, FormControl } from '@mui/material';
+import { Box, Tab, Tabs, Badge, RadioGroup, FormControlLabel, Radio, FormLabel, FormControl, Paper } from '@mui/material';
 import { OrderManagement } from './OrderManagement';
 import { Archive } from './Archive';
 import { useArchiveManagement } from '../hooks/useArchiveManagement';
@@ -100,8 +100,12 @@ export const TabLayout: React.FC = () => {
         <Archive />
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <SettingsThemeSwitcher />
-        <SettingsCurrencySwitcher />
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <SettingsThemeSwitcher />
+        </Paper>
+        <Paper sx={{ p: 3 }}>
+          <SettingsCurrencySwitcher />
+        </Paper>
       </TabPanel>
     </Box>
   );
