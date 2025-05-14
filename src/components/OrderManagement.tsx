@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { useOrderManagement } from '../hooks/useOrderManagement';
-import { orderFormService } from '../services/orderFormService';
 import {
   Box,
   TextField,
@@ -15,6 +14,7 @@ import {
   ButtonGroup,
   Button,
   Modal,
+  Collapse,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -24,6 +24,8 @@ import {
   Archive as ArchiveIcon,
   DeleteForever,
   TouchApp,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import { useCurrency } from '../contexts/CurrencyContext';
 
@@ -31,7 +33,6 @@ export const OrderManagement: React.FC = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const {
     orderItems,
-    editingItem,
     isLoading,
     error,
     summary,
@@ -42,6 +43,18 @@ export const OrderManagement: React.FC = () => {
   // Modal state for location editing
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [locationInput, setLocationInput] = useState(summary.billLocation || '');
+  
+  // Modal state for item name editing
+  const [nameModalOpen, setNameModalOpen] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [currentEditingItem, setCurrentEditingItem] = useState<any>(null);
+  
+  // Modal state for price editing
+  const [priceModalOpen, setPriceModalOpen] = useState(false);
+  const [priceInput, setPriceInput] = useState('');
+  
+  // State to track expanded/collapsed items
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   const handleOpenLocationModal = () => {
     setLocationInput(summary.billLocation || '');
@@ -51,6 +64,45 @@ export const OrderManagement: React.FC = () => {
   const handleLocationModalOk = () => {
     handlers.handleLocationChange(locationInput);
     setLocationModalOpen(false);
+  };
+  
+  // Handlers for item name editing modal
+  const handleOpenNameModal = (item: any) => {
+    setNameInput(item.itemName);
+    setCurrentEditingItem(item);
+    setNameModalOpen(true);
+  };
+  const handleCloseNameModal = () => setNameModalOpen(false);
+  const handleNameModalOk = () => {
+    if (currentEditingItem && nameInput) {
+      handlers.handleNameChange(currentEditingItem, nameInput);
+      setNameModalOpen(false);
+    }
+  };
+  
+  // Handlers for price editing modal
+  const handleOpenPriceModal = (item: any) => {
+    setPriceInput(item.itemInitialPrice.toString());
+    setCurrentEditingItem(item);
+    setPriceModalOpen(true);
+  };
+  const handleClosePriceModal = () => setPriceModalOpen(false);
+  const handlePriceModalOk = () => {
+    if (currentEditingItem && priceInput) {
+      const newPrice = Number(priceInput);
+      if (!isNaN(newPrice) && newPrice > 0) {
+        handlers.handlePriceChange(currentEditingItem, newPrice);
+      }
+      setPriceModalOpen(false);
+    }
+  };
+  
+  // Toggle expanded state of an item
+  const toggleExpand = (itemId: string) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
   };
 
   if (isLoading) {
@@ -117,7 +169,7 @@ export const OrderManagement: React.FC = () => {
             <CardContent>
               <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', width: '100%' }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack spacing={1} sx={{ textAlign: 'left' }}>
+                  <Stack sx={{ textAlign: 'left' }}>
                     <Box display="flex" alignItems="center">
                       <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Location:</Typography>
                       <Typography
@@ -172,11 +224,16 @@ export const OrderManagement: React.FC = () => {
                       <Typography variant="body1" sx={{ textAlign: 'left' }}>{summary.itemCount}</Typography>
                     </Box>
                     {summary.lastOrder && (
-                      <Box display="flex" alignItems="center">
-                        <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Last order:</Typography>
-                        <Typography variant="body1" sx={{ textAlign: 'left' }}>
-                          {summary.lastOrder.itemName} {summary.lastOrder.currentTime}
-                        </Typography>
+                      <Box display="flex" alignItems="flex-start">
+                        <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Last activity:</Typography>
+                        <Box>
+                          <Typography variant="body1" sx={{ textAlign: 'left', fontWeight: 'medium' }}>
+                            {summary.lastOrder.itemName}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            at {summary.lastOrder.currentTime}
+                          </Typography>
+                        </Box>
                       </Box>
                     )}
                   </Stack>
@@ -202,87 +259,162 @@ export const OrderManagement: React.FC = () => {
 
           <Stack spacing={2}>
             {orderItems.map((item) => (
-              <Paper key={item.id} sx={{ p: 2, mb: 1 }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
-                  <Box sx={{ flexGrow: 1 }}>
+              <Paper 
+                key={item.id} 
+                sx={{ 
+                  p: 2, 
+                  mb: 1,
+                  cursor: 'pointer',
+                  '&:hover': { backgroundColor: 'action.hover' }
+                }}
+                onClick={() => toggleExpand(item.id!)}
+              >
+                <Stack>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="subtitle1">
-                      {editingItem === `${item.id}-name` ? (
-                        <form onSubmit={(e) => orderFormService.handleNameSubmit(e, item, handlers.handleNameChange)}>
-                          <TextField
-                            name="name"
-                            size="small"
-                            defaultValue={item.itemName}
-                            autoFocus
-                          />
-                        </form>
+                      {item.itemName}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Stack spacing={2}>
+                      {expandedItems[item.id!] ? (
+                        <ExpandLessIcon fontSize="small" />
                       ) : (
-                        <span onClick={() => handlers.setEditingItem(`${item.id}-name`)} style={{ cursor: 'pointer' }}>
-                          {item.itemName}
-                        </span>
+                        <ExpandMoreIcon fontSize="small" />
                       )}
-                    </Typography>
-                    {editingItem === `${item.id}-price` ? (
-                      <Box sx={{ mt: 1, mb: 1 }}>
-                        <form onSubmit={(e) => orderFormService.handlePriceSubmit(e, item, handlers.handlePriceChange)}>
-                          <TextField
-                            type="number"
-                            name="price"
-                            size="small"
-                            defaultValue={item.itemInitialPrice}
-                            autoFocus
-                          />
-                        </form>
+                      </Stack>
+                    </Box>
+                  </Box>
+                  
+                  <Collapse in={expandedItems[item.id!]} timeout="auto" unmountOnExit>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between" sx={{ mt: 1 }}>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="subtitle1">
+                          {item.itemName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <span onClick={(e) => {e.stopPropagation(); handleOpenPriceModal(item);}} style={{ cursor: 'pointer' }}>
+                            {item.itemInitialPrice} {currency}
+                          </span>
+                        </Typography>
+                        <Typography variant="body2">
+                          Amount: {item.itemCalculatedAmount}
+                        </Typography>
+                        <Typography variant="body2">
+                          Total: {item.itemCalculatedPrice} {currency}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {item.currentDate} {item.currentTime}
+                        </Typography>
                       </Box>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        <span onClick={() => handlers.setEditingItem(`${item.id}-price`)} style={{ cursor: 'pointer' }}>
-                          {item.itemInitialPrice} {currency}
-                        </span>
-                      </Typography>
-                    )}
-                    <Typography variant="body2">
-                      Amount: {item.itemCalculatedAmount}
-                    </Typography>
-                    <Typography variant="body2">
-                      Total: {item.itemCalculatedPrice} {currency}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {item.currentDate} {item.currentTime}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <ButtonGroup size="small">
-                      <IconButton onClick={() => handlers.handleDecrementAmount(item)} size="small">
-                        <RemoveIcon />
-                      </IconButton>
-                      <Typography sx={{ px: 1, display: 'flex', alignItems: 'center' }}>
-                        {item.itemCalculatedAmount}
-                      </Typography>
-                      <IconButton onClick={() => handlers.handleIncrementAmount(item)} size="small">
-                        <RemoveIcon />
-                      </IconButton>
-                    </ButtonGroup>
-                  </Box>
-                  <Box>
-                    <ButtonGroup size="small">
-                      <IconButton onClick={() => handlers.setEditingItem(`${item.id}-name`)} size="small">
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton 
-                        onClick={() => handlers.handleDeleteItem(item.id!)}
-                        color="error"
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </ButtonGroup>
-                  </Box>
+                      <Box onClick={(e) => e.stopPropagation()}>
+                        <ButtonGroup size="small">
+                          <IconButton onClick={() => handlers.handleDecrementAmount(item)} size="small">
+                            <RemoveIcon />
+                          </IconButton>
+                          <Typography sx={{ px: 1, display: 'flex', alignItems: 'center' }}>
+                            {item.itemCalculatedAmount}
+                          </Typography>
+                          <IconButton onClick={() => handlers.handleIncrementAmount(item)} size="small">
+                            <AddIcon />
+                          </IconButton>
+                        </ButtonGroup>
+                      </Box>
+                      <Box onClick={(e) => e.stopPropagation()}>
+                        <ButtonGroup size="small">
+                          <IconButton onClick={() => handleOpenNameModal(item)} size="small">
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton 
+                            onClick={() => handlers.handleDeleteItem(item.id!)}
+                            color="error"
+                            size="small"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </ButtonGroup>
+                      </Box>
+                    </Stack>
+                  </Collapse>
                 </Stack>
               </Paper>
             ))}
           </Stack>
         </Stack>
       )}
+      
+      {/* Modal for editing item name */}
+      <Modal open={nameModalOpen} onClose={handleCloseNameModal}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            minWidth: 300,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <TextField
+            label="Item Name"
+            value={nameInput}
+            onChange={e => setNameInput(e.target.value)}
+            autoFocus
+            sx={{ mb: 2, width: '100%' }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleNameModalOk}
+            sx={{ alignSelf: 'center' }}
+          >
+            OK
+          </Button>
+        </Box>
+      </Modal>
+
+      {/* Modal for editing price */}
+      <Modal open={priceModalOpen} onClose={handleClosePriceModal}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            minWidth: 300,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <TextField
+            label="Price"
+            type="number"
+            value={priceInput}
+            onChange={e => setPriceInput(e.target.value)}
+            autoFocus
+            InputProps={{
+              endAdornment: <Typography variant="body2">{currency}</Typography>
+            }}
+            sx={{ mb: 2, width: '100%' }}
+          />
+          <Button
+            variant="contained"
+            onClick={handlePriceModalOk}
+            sx={{ alignSelf: 'center' }}
+          >
+            OK
+          </Button>
+        </Box>
+      </Modal>
     </Stack>
   );
-}; 
+};

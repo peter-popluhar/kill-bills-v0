@@ -104,30 +104,58 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
   const handleIncrementAmount = (item: OrderItem) => {
     const newAmount = (item.itemCalculatedAmount || 0) + 1;
+    
+    const now = new Date();
+    const currentDate = now.toLocaleDateString();
+    const currentTime = now.toLocaleTimeString();
+    
     updateItem(item.id!, {
       itemCalculatedAmount: newAmount,
-      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount
+      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount,
+      currentDate,
+      currentTime
     });
   };
 
   const handleDecrementAmount = (item: OrderItem) => {
     if (item.itemCalculatedAmount <= 1) return;
     const newAmount = item.itemCalculatedAmount - 1;
+    
+    const now = new Date();
+    const currentDate = now.toLocaleDateString();
+    const currentTime = now.toLocaleTimeString();
+    
     updateItem(item.id!, {
       itemCalculatedAmount: newAmount,
-      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount
+      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount,
+      currentDate,
+      currentTime
     });
   };
 
   const handleNameChange = (item: OrderItem, newName: string) => {
-    updateItem(item.id!, { itemName: newName });
+    const now = new Date();
+    const currentDate = now.toLocaleDateString();
+    const currentTime = now.toLocaleTimeString();
+    
+    updateItem(item.id!, { 
+      itemName: newName,
+      currentDate,
+      currentTime
+    });
     setEditingItem(null);
   };
 
   const handlePriceChange = (item: OrderItem, newPrice: number) => {
+    const now = new Date();
+    const currentDate = now.toLocaleDateString();
+    const currentTime = now.toLocaleTimeString();
+    
     updateItem(item.id!, {
       itemInitialPrice: newPrice,
-      itemCalculatedPrice: newPrice * (item.itemCalculatedAmount || 1)
+      itemCalculatedPrice: newPrice * (item.itemCalculatedAmount || 1),
+      currentDate,
+      currentTime
     });
     setEditingItem(null);
   };
@@ -190,7 +218,9 @@ export function useOrderManagement(): UseOrderManagementReturn {
       };
     }
 
-    const itemCount = orderItems.length;
+    // Sum up all item quantities instead of counting records
+    const itemCount = orderItems.reduce((total, item) => total + (item.itemCalculatedAmount || 0), 0);
+    
     const lastOrder = orderItems.reduce((latest, current) => {
       const latestDate = new Date(`${latest.currentDate} ${latest.currentTime}`);
       const currentDate = new Date(`${current.currentDate} ${current.currentTime}`);
@@ -232,4 +262,4 @@ export function useOrderManagement(): UseOrderManagementReturn {
       resetForm
     }
   };
-} 
+}
