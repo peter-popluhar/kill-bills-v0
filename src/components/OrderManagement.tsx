@@ -1,29 +1,20 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useOrderManagement } from '../hooks/useOrderManagement';
 import { orderFormService } from '../services/orderFormService';
 import {
   Box,
   TextField,
-  Button,
-  Select,
-  MenuItem,
   Typography,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   CircularProgress,
   Alert,
   Stack,
-  FormControl,
-  InputLabel,
   Card,
   CardContent,
   ButtonGroup,
+  Button,
+  Modal,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -31,6 +22,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Archive as ArchiveIcon,
+  DeleteForever,
+  TouchApp,
 } from '@mui/icons-material';
 import { useCurrency } from '../contexts/CurrencyContext';
 
@@ -39,13 +32,26 @@ export const OrderManagement: React.FC = () => {
   const {
     orderItems,
     editingItem,
-    editingLocation,
     isLoading,
     error,
     summary,
     handlers
   } = useOrderManagement();
   const { currency } = useCurrency();
+
+  // Modal state for location editing
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [locationInput, setLocationInput] = useState(summary.billLocation || '');
+
+  const handleOpenLocationModal = () => {
+    setLocationInput(summary.billLocation || '');
+    setLocationModalOpen(true);
+  };
+  const handleCloseLocationModal = () => setLocationModalOpen(false);
+  const handleLocationModalOk = () => {
+    handlers.handleLocationChange(locationInput);
+    setLocationModalOpen(false);
+  };
 
   if (isLoading) {
     return (
@@ -67,8 +73,6 @@ export const OrderManagement: React.FC = () => {
   return (
     <Stack spacing={3}>
       <Paper component="form" ref={formRef} onSubmit={e => {
-        const form = e.target as HTMLFormElement;
-        const formData = new FormData(form);
         handlers.handleSubmit(e);
       }} sx={{ p: 2 }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
@@ -94,14 +98,15 @@ export const OrderManagement: React.FC = () => {
             />
           </Box>
           <Box sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: 'auto' } }}>
-            <Button
-              fullWidth
+            <IconButton
               type="submit"
-              variant="contained"
-              startIcon={<AddIcon />}
+              color="primary"
+              size="large"
+              aria-label="Add Item"
+              sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}
             >
-              Add Item
-            </Button>
+              <AddIcon fontSize="inherit" />
+            </IconButton>
           </Box>
         </Box>
       </Paper>
@@ -110,103 +115,97 @@ export const OrderManagement: React.FC = () => {
         <Stack spacing={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                <Box sx={{ flexGrow: 1, minWidth: { xs: '100%', md: 'calc(66.66% - 24px)' } }}>
-                  <Stack spacing={2}>
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography variant="subtitle1">Total Items:</Typography>
-                      <Typography variant="body1">{summary.itemCount}</Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', width: '100%' }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Stack spacing={1} sx={{ textAlign: 'left' }}>
+                    <Box display="flex" alignItems="center">
+                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Location:</Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ textAlign: 'left', mr: 1 }}
+                      >
+                        {summary.billLocation || 'Click to set location'}
+                      </Typography>
+                      <IconButton size="small" onClick={handleOpenLocationModal}>
+                        <TouchApp />
+                      </IconButton>
                     </Box>
-                    
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography variant="subtitle1">Bill Location:</Typography>
-                      {editingLocation ? (
-                        <form onSubmit={(e) => orderFormService.handleLocationSubmit(e, handlers.handleLocationChange)}>
-                          <TextField
-                            name="location"
-                            size="small"
-                            defaultValue={summary.billLocation}
-                            autoFocus
-                          />
-                        </form>
-                      ) : (
-                        <Typography
-                          variant="body1"
-                          onClick={() => handlers.setEditingLocation(true)}
-                          sx={{ cursor: 'pointer' }}
+                    <Modal open={locationModalOpen} onClose={handleCloseLocationModal}>
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          bgcolor: 'background.paper',
+                          boxShadow: 24,
+                          p: 4,
+                          borderRadius: 2,
+                          minWidth: 300,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <TextField
+                          label="Location"
+                          value={locationInput}
+                          onChange={e => setLocationInput(e.target.value)}
+                          autoFocus
+                          sx={{ mb: 2, width: '100%' }}
+                        />
+                        <Button
+                          variant="contained"
+                          onClick={handleLocationModalOk}
+                          sx={{ alignSelf: 'center' }}
                         >
-                          {summary.billLocation || 'Click to set location'}
-                        </Typography>
-                      )}
+                          OK
+                        </Button>
+                      </Box>
+                    </Modal>
+                    <Box display="flex" alignItems="center">
+                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Total:</Typography>
+                      <Typography variant="body1" sx={{ textAlign: 'left' }}>{Number(summary.totalsByCurrency[currency] || 0).toFixed(2)} {currency}</Typography>
                     </Box>
-                    
-                    <Box display="flex" justifyContent="space-between">
-                      <Typography variant="subtitle1">Total ({currency}):</Typography>
-                      <Typography variant="body1">{Number(summary.totalsByCurrency[currency] || 0).toFixed(2)}</Typography>
+                    <Box display="flex" alignItems="center">
+                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Items:</Typography>
+                      <Typography variant="body1" sx={{ textAlign: 'left' }}>{summary.itemCount}</Typography>
                     </Box>
-                    
                     {summary.lastOrder && (
-                      <>
-                        <Box display="flex" justifyContent="space-between">
-                          <Typography variant="subtitle1">Last Order:</Typography>
-                          <Typography variant="body1">{summary.lastOrder.itemName}</Typography>
-                        </Box>
-                        <Box display="flex" justifyContent="space-between">
-                          <Typography variant="subtitle1">Last Order Time:</Typography>
-                          <Typography variant="body1">
-                            {summary.lastOrder.currentDate} {summary.lastOrder.currentTime}
-                          </Typography>
-                        </Box>
-                      </>
+                      <Box display="flex" alignItems="center">
+                        <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Last order:</Typography>
+                        <Typography variant="body1" sx={{ textAlign: 'left' }}>
+                          {summary.lastOrder.itemName} {summary.lastOrder.currentTime}
+                        </Typography>
+                      </Box>
                     )}
                   </Stack>
                 </Box>
-                <Box sx={{ 
-                  flexGrow: 1, 
-                  minWidth: { xs: '100%', md: 'calc(33.33% - 24px)' },
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  alignItems: 'flex-start'
-                }}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={handlers.handleDeleteOrder}
-                    >
-                      Delete Order
-                    </Button>
-                    <Button
-                      variant="contained"
-                      startIcon={<ArchiveIcon />}
-                      onClick={handlers.handleArchiveOrder}
-                    >
-                      Archive Order
-                    </Button>
-                  </Stack>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, ml: 2 }}>
+                  <IconButton
+                    onClick={handlers.handleArchiveOrder}
+                    sx={{ backgroundColor: 'primary.main', color: 'white', mb: 1, '&:hover': { backgroundColor: 'primary.dark' } }}
+                  >
+                    <ArchiveIcon fontSize="inherit" />
+                  </IconButton>
+                  <IconButton
+                    color="error"
+                    onClick={handlers.handleDeleteOrder}
+                    sx={{ backgroundColor: 'error.main', color: 'white', '&:hover': { backgroundColor: 'error.dark' } }}
+                  >
+                    <DeleteForever fontSize="inherit" />
+                  </IconButton>
                 </Box>
               </Box>
             </CardContent>
           </Card>
 
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Price</TableCell>
-                  <TableCell>Amount</TableCell>
-                  <TableCell>Total</TableCell>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Time</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {orderItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
+          <Stack spacing={2}>
+            {orderItems.map((item) => (
+              <Paper key={item.id} sx={{ p: 2, mb: 1 }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="subtitle1">
                       {editingItem === `${item.id}-name` ? (
                         <form onSubmit={(e) => orderFormService.handleNameSubmit(e, item, handlers.handleNameChange)}>
                           <TextField
@@ -217,16 +216,13 @@ export const OrderManagement: React.FC = () => {
                           />
                         </form>
                       ) : (
-                        <Typography
-                          onClick={() => handlers.setEditingItem(`${item.id}-name`)}
-                          sx={{ cursor: 'pointer' }}
-                        >
+                        <span onClick={() => handlers.setEditingItem(`${item.id}-name`)} style={{ cursor: 'pointer' }}>
                           {item.itemName}
-                        </Typography>
+                        </span>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      {editingItem === `${item.id}-price` ? (
+                    </Typography>
+                    {editingItem === `${item.id}-price` ? (
+                      <Box sx={{ mt: 1, mb: 1 }}>
                         <form onSubmit={(e) => orderFormService.handlePriceSubmit(e, item, handlers.handlePriceChange)}>
                           <TextField
                             type="number"
@@ -236,50 +232,55 @@ export const OrderManagement: React.FC = () => {
                             autoFocus
                           />
                         </form>
-                      ) : (
-                        <Typography
-                          onClick={() => handlers.setEditingItem(`${item.id}-price`)}
-                          sx={{ cursor: 'pointer' }}
-                        >
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        <span onClick={() => handlers.setEditingItem(`${item.id}-price`)} style={{ cursor: 'pointer' }}>
                           {item.itemInitialPrice} {currency}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <ButtonGroup size="small">
-                        <IconButton onClick={() => handlers.handleDecrementAmount(item)} size="small">
-                          <RemoveIcon />
-                        </IconButton>
-                        <Typography sx={{ px: 1, display: 'flex', alignItems: 'center' }}>
-                          {item.itemCalculatedAmount}
-                        </Typography>
-                        <IconButton onClick={() => handlers.handleIncrementAmount(item)} size="small">
-                          <AddIcon />
-                        </IconButton>
-                      </ButtonGroup>
-                    </TableCell>
-                    <TableCell>{item.itemCalculatedPrice} {currency}</TableCell>
-                    <TableCell>{item.currentDate}</TableCell>
-                    <TableCell>{item.currentTime}</TableCell>
-                    <TableCell>
-                      <ButtonGroup size="small">
-                        <IconButton onClick={() => handlers.setEditingItem(`${item.id}-name`)} size="small">
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton 
-                          onClick={() => handlers.handleDeleteItem(item.id!)}
-                          color="error"
-                          size="small"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </ButtonGroup>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                        </span>
+                      </Typography>
+                    )}
+                    <Typography variant="body2">
+                      Amount: {item.itemCalculatedAmount}
+                    </Typography>
+                    <Typography variant="body2">
+                      Total: {item.itemCalculatedPrice} {currency}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {item.currentDate} {item.currentTime}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <ButtonGroup size="small">
+                      <IconButton onClick={() => handlers.handleDecrementAmount(item)} size="small">
+                        <RemoveIcon />
+                      </IconButton>
+                      <Typography sx={{ px: 1, display: 'flex', alignItems: 'center' }}>
+                        {item.itemCalculatedAmount}
+                      </Typography>
+                      <IconButton onClick={() => handlers.handleIncrementAmount(item)} size="small">
+                        <RemoveIcon />
+                      </IconButton>
+                    </ButtonGroup>
+                  </Box>
+                  <Box>
+                    <ButtonGroup size="small">
+                      <IconButton onClick={() => handlers.setEditingItem(`${item.id}-name`)} size="small">
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton 
+                        onClick={() => handlers.handleDeleteItem(item.id!)}
+                        color="error"
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </ButtonGroup>
+                  </Box>
+                </Stack>
+              </Paper>
+            ))}
+          </Stack>
         </Stack>
       )}
     </Stack>

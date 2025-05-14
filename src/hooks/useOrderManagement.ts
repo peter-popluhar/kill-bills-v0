@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { database } from '../firebase';
-import { ref, push, set } from 'firebase/database';
+import { ref, push, set, update } from 'firebase/database';
 import { OrderItem } from '../types/OrderItem';
 import { useAuth } from '../contexts/AuthContext';
 import { useFirebaseCollection } from './useFirebaseCollection';
@@ -140,8 +140,8 @@ export function useOrderManagement(): UseOrderManagementReturn {
       [`orderItems/${item.id}/billLocation`]: newLocation
     }), {});
 
-    const itemsRef = ref(database, '');
-    set(itemsRef, updates).catch((error) => {
+    const itemsRef = ref(database, '/');
+    update(itemsRef, updates).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating location'));
     });
     setEditingLocation(false);

@@ -63,7 +63,7 @@ export const Archive: React.FC = () => {
         </Tooltip>
       </Box>
       {archivedOrders.map((order: ArchivedOrder) => (
-        <Paper key={order.id} sx={{ p: 2, mb: 2 }}>
+        <Paper key={order.archiveId || order.id} sx={{ p: 2, mb: 2 }}>
           <Stack spacing={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle2" color="text.secondary">
@@ -79,7 +79,7 @@ export const Archive: React.FC = () => {
               </Typography>
               <Stack spacing={0.5}>
                 {order.items?.map((item, index) => (
-                  <Typography key={index} variant="body2">
+                  <Typography key={item.itemName + '-' + index} variant="body2">
                     {item.itemName} ({item.itemCalculatedAmount}x {item.itemInitialPrice} {item.currency})
                   </Typography>
                 ))}
