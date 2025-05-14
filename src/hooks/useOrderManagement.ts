@@ -111,6 +111,7 @@ export function useOrderManagement(): UseOrderManagementReturn {
       currentTime,
       user: user.email,
       billLocation: currentBillLocation,
+      currency: currency
     }).then(() => {
       form.reset();
       // Update manual last order immediately

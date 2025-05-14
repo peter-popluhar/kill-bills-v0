@@ -8,11 +8,11 @@ import { CurrencyProvider } from './contexts/CurrencyContext'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ThemeModeProvider>
-      <CurrencyProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <CurrencyProvider>
           <App />
-        </AuthProvider>
-      </CurrencyProvider>
+        </CurrencyProvider>
+      </AuthProvider>
     </ThemeModeProvider>
   </React.StrictMode>,
 )
