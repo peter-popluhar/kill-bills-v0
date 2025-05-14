@@ -1,6 +1,6 @@
 export interface OrderItem {
   id?: string;
-  archiveId: number;
+  archiveId: string;
   billLocation: string;
   currency: string;
   currentDate: string;

@@ -93,12 +93,15 @@ export function useOrderManagement(): UseOrderManagementReturn {
       id: newItemRef.key || '',
       itemName,
       itemInitialPrice,
+      itemInitialAmount: 1,
       itemCalculatedAmount: 1,
       itemCalculatedPrice: itemInitialPrice,
       currentDate,
       currentTime,
-      user: user.email,
+      user: user.email || 'unknown',
       billLocation: currentBillLocation,
+      archiveId: '',
+      currency: currency
     };
 
     set(newItemRef, {

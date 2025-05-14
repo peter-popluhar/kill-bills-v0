@@ -15,6 +15,8 @@ import {
   Button,
   Modal,
   Collapse,
+  Dialog,
+  DialogTitle,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,6 +30,8 @@ import {
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import { useCurrency } from '../contexts/CurrencyContext';
+
+import { OrderItem } from '../types/OrderItem';
 
 export const OrderManagement: React.FC = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -48,7 +52,8 @@ export const OrderManagement: React.FC = () => {
   // Modal state for item name editing
   const [nameModalOpen, setNameModalOpen] = useState(false);
   const [nameInput, setNameInput] = useState('');
-  const [currentEditingItem, setCurrentEditingItem] = useState<any>(null);
+
+  const [currentEditingItem, setCurrentEditingItem] = useState<OrderItem | null>(null);
   
   // Modal state for price editing
   const [priceModalOpen, setPriceModalOpen] = useState(false);
@@ -56,6 +61,9 @@ export const OrderManagement: React.FC = () => {
   
   // State to track expanded/collapsed items
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  
+  // State for archive success dialog
+  const [archiveSuccessOpen, setArchiveSuccessOpen] = useState(false);
 
   useEffect(() => {
     // Trigger re-render when lastUpdateTimestamp changes
@@ -72,7 +80,7 @@ export const OrderManagement: React.FC = () => {
   };
   
   // Handlers for item name editing modal
-  const handleOpenNameModal = (item: any) => {
+  const handleOpenNameModal = (item: OrderItem) => {
     setNameInput(item.itemName);
     setCurrentEditingItem(item);
     setNameModalOpen(true);
@@ -86,7 +94,7 @@ export const OrderManagement: React.FC = () => {
   };
   
   // Handlers for price editing modal
-  const handleOpenPriceModal = (item: any) => {
+  const handleOpenPriceModal = (item: OrderItem) => {
     setPriceInput(item.itemInitialPrice.toString());
     setCurrentEditingItem(item);
     setPriceModalOpen(true);
@@ -99,6 +107,26 @@ export const OrderManagement: React.FC = () => {
         handlers.handlePriceChange(currentEditingItem, newPrice);
       }
       setPriceModalOpen(false);
+    }
+  };
+  
+  // Handler for archiving orders with feedback
+  const handleArchiveWithFeedback = async () => {
+    if (orderItems.length === 0) return;
+    
+    try {
+      // Call the archive function and await its completion
+      await handlers.handleArchiveOrder();
+      
+      // Show success dialog after archive is complete
+      setArchiveSuccessOpen(true);
+      
+      // Auto close after 3 seconds
+      setTimeout(() => {
+        setArchiveSuccessOpen(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Error archiving order:", error);
     }
   };
   
@@ -240,7 +268,7 @@ export const OrderManagement: React.FC = () => {
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, ml: 2 }}>
                   <IconButton
-                    onClick={handlers.handleArchiveOrder}
+                    onClick={handleArchiveWithFeedback}
                     sx={{ backgroundColor: 'primary.main', color: 'white', mb: 1, '&:hover': { backgroundColor: 'primary.dark' } }}
                   >
                     <ArchiveIcon fontSize="inherit" />
@@ -271,9 +299,15 @@ export const OrderManagement: React.FC = () => {
               >
                 <Stack>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="subtitle1">
-                      {item.itemName}
-                    </Typography>
+                    <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="subtitle1">
+                          {item.itemName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {item.itemCalculatedAmount} x {item.itemInitialPrice} = {item.itemCalculatedPrice}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">{item.currentTime}</Typography>
+                      </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Stack spacing={2}>
                       {expandedItems[item.id!] ? (
@@ -288,23 +322,6 @@ export const OrderManagement: React.FC = () => {
                   <Collapse in={expandedItems[item.id!]} timeout="auto" unmountOnExit>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between" sx={{ mt: 1 }}>
                       <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle1">
-                          {item.itemName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          <span onClick={(e) => {e.stopPropagation(); handleOpenPriceModal(item);}} style={{ cursor: 'pointer' }}>
-                            {item.itemInitialPrice} {currency}
-                          </span>
-                        </Typography>
-                        <Typography variant="body2">
-                          Amount: {item.itemCalculatedAmount}
-                        </Typography>
-                        <Typography variant="body2">
-                          Total: {item.itemCalculatedPrice} {currency}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {item.currentDate} {item.currentTime}
-                        </Typography>
                       </Box>
                       <Box onClick={(e) => e.stopPropagation()}>
                         <ButtonGroup size="small">
@@ -322,6 +339,9 @@ export const OrderManagement: React.FC = () => {
                       <Box onClick={(e) => e.stopPropagation()}>
                         <ButtonGroup size="small">
                           <IconButton onClick={() => handleOpenNameModal(item)} size="small">
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton onClick={(e) => {e.stopPropagation(); handleOpenPriceModal(item);}} size="small">
                             <EditIcon />
                           </IconButton>
                           <IconButton 
@@ -415,6 +435,19 @@ export const OrderManagement: React.FC = () => {
           </Button>
         </Box>
       </Modal>
+
+      {/* Archive Success Dialog */}
+      <Dialog
+        open={archiveSuccessOpen}
+        onClose={() => setArchiveSuccessOpen(false)}
+        aria-labelledby="archive-success-dialog-title"
+      >
+        <DialogTitle id="alert-dialog-slide-title">
+            <Typography component="p" variant="subtitle1">
+                Bill was added to Archive
+            </Typography>
+        </DialogTitle>
+      </Dialog>
     </Stack>
   );
 };
