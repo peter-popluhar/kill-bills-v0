@@ -21,7 +21,6 @@ export interface UseOrderManagementReturn {
   isLoading: boolean;
   error: Error | null;
   summary: OrderSummary;
-  lastUpdateTimestamp: number;
   handlers: {
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     handleUpdateItem: (itemId: string, updates: Partial<OrderItem>) => void;
@@ -42,7 +41,6 @@ export interface UseOrderManagementReturn {
 export function useOrderManagement(): UseOrderManagementReturn {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editingLocation, setEditingLocation] = useState(false);
-  const [lastUpdateTimestamp, setLastUpdateTimestamp] = useState(Date.now());
   const [manualLastOrder, setManualLastOrder] = useState<OrderItem | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -117,7 +115,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
       form.reset();
       // Update manual last order immediately
       setManualLastOrder(newItem);
-      setLastUpdateTimestamp(Date.now());
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error adding new item'));
     });
@@ -147,7 +144,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }).then(() => {
       // Update manual last order immediately
       setManualLastOrder(updatedItem);
-      setLastUpdateTimestamp(Date.now());
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating item'));
     });
@@ -178,7 +174,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }).then(() => {
       // Update manual last order immediately
       setManualLastOrder(updatedItem);
-      setLastUpdateTimestamp(Date.now());
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating item'));
     });
@@ -204,7 +199,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }).then(() => {
       // Update manual last order immediately
       setManualLastOrder(updatedItem);
-      setLastUpdateTimestamp(Date.now());
       setEditingItem(null);
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating item name'));
@@ -233,7 +227,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }).then(() => {
       // Update manual last order immediately
       setManualLastOrder(updatedItem);
-      setLastUpdateTimestamp(Date.now());
       setEditingItem(null);
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating item price'));
@@ -334,7 +327,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     error,
     // Include lastUpdateTimestamp in dependency chain to trigger recalculation
     summary: calculateSummary(), 
-    lastUpdateTimestamp, // Expose this so component can use it for dependency
     handlers: {
       handleSubmit,
       handleUpdateItem: updateItem,
