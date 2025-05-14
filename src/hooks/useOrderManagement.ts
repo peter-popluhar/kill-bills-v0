@@ -21,6 +21,7 @@ export interface UseOrderManagementReturn {
   isLoading: boolean;
   error: Error | null;
   summary: OrderSummary;
+  lastUpdateTimestamp: number;
   handlers: {
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     handleUpdateItem: (itemId: string, updates: Partial<OrderItem>) => void;
@@ -41,6 +42,8 @@ export interface UseOrderManagementReturn {
 export function useOrderManagement(): UseOrderManagementReturn {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editingLocation, setEditingLocation] = useState(false);
+  const [lastUpdateTimestamp, setLastUpdateTimestamp] = useState(Date.now());
+  const [manualLastOrder, setManualLastOrder] = useState<OrderItem | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const { user, isAuthorized } = useAuth();
@@ -86,6 +89,18 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
     const currentBillLocation = orderItems.length > 0 ? orderItems[0].billLocation : '';
 
+    const newItem: OrderItem = {
+      id: newItemRef.key || '',
+      itemName,
+      itemInitialPrice,
+      itemCalculatedAmount: 1,
+      itemCalculatedPrice: itemInitialPrice,
+      currentDate,
+      currentTime,
+      user: user.email,
+      billLocation: currentBillLocation,
+    };
+
     set(newItemRef, {
       itemName,
       itemInitialPrice,
@@ -97,6 +112,9 @@ export function useOrderManagement(): UseOrderManagementReturn {
       billLocation: currentBillLocation,
     }).then(() => {
       form.reset();
+      // Update manual last order immediately
+      setManualLastOrder(newItem);
+      setLastUpdateTimestamp(Date.now());
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error adding new item'));
     });
@@ -109,11 +127,26 @@ export function useOrderManagement(): UseOrderManagementReturn {
     const currentDate = now.toLocaleDateString();
     const currentTime = now.toLocaleTimeString();
     
+    // Create updated item for immediate UI update
+    const updatedItem = {
+      ...item,
+      itemCalculatedAmount: newAmount,
+      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount,
+      currentDate,
+      currentTime
+    };
+    
     updateItem(item.id!, {
       itemCalculatedAmount: newAmount,
       itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount,
       currentDate,
       currentTime
+    }).then(() => {
+      // Update manual last order immediately
+      setManualLastOrder(updatedItem);
+      setLastUpdateTimestamp(Date.now());
+    }).catch((error) => {
+      setError(error instanceof Error ? error : new Error('Error updating item'));
     });
   };
 
@@ -125,11 +158,26 @@ export function useOrderManagement(): UseOrderManagementReturn {
     const currentDate = now.toLocaleDateString();
     const currentTime = now.toLocaleTimeString();
     
+    // Create updated item for immediate UI update
+    const updatedItem = {
+      ...item,
+      itemCalculatedAmount: newAmount,
+      itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount,
+      currentDate,
+      currentTime
+    };
+    
     updateItem(item.id!, {
       itemCalculatedAmount: newAmount,
       itemCalculatedPrice: (item.itemInitialPrice || 0) * newAmount,
       currentDate,
       currentTime
+    }).then(() => {
+      // Update manual last order immediately
+      setManualLastOrder(updatedItem);
+      setLastUpdateTimestamp(Date.now());
+    }).catch((error) => {
+      setError(error instanceof Error ? error : new Error('Error updating item'));
     });
   };
 
@@ -138,12 +186,26 @@ export function useOrderManagement(): UseOrderManagementReturn {
     const currentDate = now.toLocaleDateString();
     const currentTime = now.toLocaleTimeString();
     
+    // Create updated item for immediate UI update
+    const updatedItem = {
+      ...item,
+      itemName: newName,
+      currentDate,
+      currentTime
+    };
+    
     updateItem(item.id!, { 
       itemName: newName,
       currentDate,
       currentTime
+    }).then(() => {
+      // Update manual last order immediately
+      setManualLastOrder(updatedItem);
+      setLastUpdateTimestamp(Date.now());
+      setEditingItem(null);
+    }).catch((error) => {
+      setError(error instanceof Error ? error : new Error('Error updating item name'));
     });
-    setEditingItem(null);
   };
 
   const handlePriceChange = (item: OrderItem, newPrice: number) => {
@@ -151,13 +213,28 @@ export function useOrderManagement(): UseOrderManagementReturn {
     const currentDate = now.toLocaleDateString();
     const currentTime = now.toLocaleTimeString();
     
+    // Create updated item for immediate UI update
+    const updatedItem = {
+      ...item,
+      itemInitialPrice: newPrice,
+      itemCalculatedPrice: newPrice * (item.itemCalculatedAmount || 1),
+      currentDate,
+      currentTime
+    };
+    
     updateItem(item.id!, {
       itemInitialPrice: newPrice,
       itemCalculatedPrice: newPrice * (item.itemCalculatedAmount || 1),
       currentDate,
       currentTime
+    }).then(() => {
+      // Update manual last order immediately
+      setManualLastOrder(updatedItem);
+      setLastUpdateTimestamp(Date.now());
+      setEditingItem(null);
+    }).catch((error) => {
+      setError(error instanceof Error ? error : new Error('Error updating item price'));
     });
-    setEditingItem(null);
   };
 
   const handleLocationChange = (newLocation: string) => {
@@ -221,11 +298,18 @@ export function useOrderManagement(): UseOrderManagementReturn {
     // Sum up all item quantities instead of counting records
     const itemCount = orderItems.reduce((total, item) => total + (item.itemCalculatedAmount || 0), 0);
     
-    const lastOrder = orderItems.reduce((latest, current) => {
-      const latestDate = new Date(`${latest.currentDate} ${latest.currentTime}`);
-      const currentDate = new Date(`${current.currentDate} ${current.currentTime}`);
-      return currentDate > latestDate ? current : latest;
-    }, orderItems[0]);
+    // If we have a manual last order, use it for immediate UI feedback
+    // Otherwise fall back to calculating from orderItems
+    let lastOrder: OrderItem | null;
+    if (manualLastOrder) {
+      lastOrder = manualLastOrder;
+    } else {
+      lastOrder = orderItems.reduce((latest, current) => {
+        const latestDate = new Date(`${latest.currentDate} ${latest.currentTime}`);
+        const currentDate = new Date(`${current.currentDate} ${current.currentTime}`);
+        return currentDate > latestDate ? current : latest;
+      }, orderItems[0]);
+    }
 
     const totalsByCurrency = {
       [currency]: orderItems.reduce((acc, item) => acc + item.itemCalculatedPrice, 0)
@@ -245,7 +329,9 @@ export function useOrderManagement(): UseOrderManagementReturn {
     editingLocation,
     isLoading,
     error,
-    summary: calculateSummary(),
+    // Include lastUpdateTimestamp in dependency chain to trigger recalculation
+    summary: calculateSummary(), 
+    lastUpdateTimestamp, // Expose this so component can use it for dependency
     handlers: {
       handleSubmit,
       handleUpdateItem: updateItem,

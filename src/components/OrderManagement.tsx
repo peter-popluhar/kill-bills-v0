@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useOrderManagement } from '../hooks/useOrderManagement';
 import {
   Box,
@@ -36,7 +36,8 @@ export const OrderManagement: React.FC = () => {
     isLoading,
     error,
     summary,
-    handlers
+    handlers,
+    lastUpdateTimestamp
   } = useOrderManagement();
   const { currency } = useCurrency();
 
@@ -55,6 +56,10 @@ export const OrderManagement: React.FC = () => {
   
   // State to track expanded/collapsed items
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // Trigger re-render when lastUpdateTimestamp changes
+  }, [lastUpdateTimestamp]);
 
   const handleOpenLocationModal = () => {
     setLocationInput(summary.billLocation || '');
@@ -225,15 +230,10 @@ export const OrderManagement: React.FC = () => {
                     </Box>
                     {summary.lastOrder && (
                       <Box display="flex" alignItems="flex-start">
-                        <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Last activity:</Typography>
-                        <Box>
-                          <Typography variant="body1" sx={{ textAlign: 'left', fontWeight: 'medium' }}>
-                            {summary.lastOrder.itemName}
+                        <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Last order:</Typography>
+                        <Typography variant="body1" sx={{ textAlign: 'left' }}>
+                            {summary.lastOrder.itemName} at {summary.lastOrder.currentTime}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            at {summary.lastOrder.currentTime}
-                          </Typography>
-                        </Box>
                       </Box>
                     )}
                   </Stack>
