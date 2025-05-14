@@ -86,7 +86,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ value, onChange }) => {
 export const TabLayout: React.FC = () => {
   const [value, setValue] = useState(0);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
 
@@ -122,9 +122,9 @@ const SettingsThemeSwitcher: React.FC = () => {
         onChange={e => setMode(e.target.value as 'system' | 'light' | 'dark')}
         name="theme-mode"
       >
-        <FormControlLabel value="system" control={<Radio />} label="System" />
         <FormControlLabel value="light" control={<Radio />} label="Light" />
         <FormControlLabel value="dark" control={<Radio />} label="Dark" />
+        <FormControlLabel value="system" control={<Radio />} label="System" />
       </RadioGroup>
     </FormControl>
   );

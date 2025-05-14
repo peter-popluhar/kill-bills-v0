@@ -3,19 +3,13 @@ import {
   Box,
   Typography,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   CircularProgress,
   Alert,
   Stack,
   IconButton,
   Tooltip,
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { DeleteForever as DeleteIcon } from '@mui/icons-material';
 import { useArchiveManagement } from '../hooks/useArchiveManagement';
 import { ArchivedOrder } from '../types/ArchivedOrder';
 
@@ -51,17 +45,6 @@ export const Archive: React.FC = () => {
 
   return (
     <Stack spacing={3}>
-      <Box display="flex" justifyContent="flex-end">
-        <Tooltip title="Delete all archives">
-          <IconButton
-            onClick={handleDeleteArchive}
-            color="error"
-            size="large"
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
       {archivedOrders.map((order: ArchivedOrder) => (
         <Paper key={order.archiveId || order.id} sx={{ p: 2, mb: 2 }}>
           <Stack spacing={2}>
@@ -75,7 +58,7 @@ export const Archive: React.FC = () => {
             </Box>
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                Items
+                <strong>Items</strong>
               </Typography>
               <Stack spacing={0.5}>
                 {order.items?.map((item, index) => (
@@ -87,7 +70,7 @@ export const Archive: React.FC = () => {
             </Box>
             <Box>
               <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
-                Total
+                <strong>Total</strong>
               </Typography>
               <Stack spacing={0.5}>
                 {order.totalsByCurrency && Object.entries(order.totalsByCurrency).map(([currency, total]) => (
@@ -100,6 +83,18 @@ export const Archive: React.FC = () => {
           </Stack>
         </Paper>
       ))}
+      <Box display="flex" justifyContent="center">
+        <Tooltip title="Delete all archives">
+          <IconButton
+            onClick={handleDeleteArchive}
+            color="error"
+            size="large"
+            sx={{ backgroundColor: 'error.main', color: 'white', '&:hover': { backgroundColor: 'error.dark' } }}
+          >
+            <DeleteIcon fontSize='large' />
+          </IconButton>
+        </Tooltip>
+      </Box>
     </Stack>
   );
 }; 

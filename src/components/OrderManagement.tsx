@@ -11,7 +11,6 @@ import {
   Stack,
   Card,
   CardContent,
-  ButtonGroup,
   Button,
   Modal,
   Collapse,
@@ -21,13 +20,14 @@ import {
 import {
   Add as AddIcon,
   Remove as RemoveIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Archive as ArchiveIcon,
   DeleteForever,
   TouchApp,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  TextFields as TextFieldsIcon,
+  AttachMoney as AttachMoneyIcon,
 } from '@mui/icons-material';
 import { useCurrency } from '../contexts/CurrencyContext';
 
@@ -124,7 +124,7 @@ export const OrderManagement: React.FC = () => {
       // Auto close after 3 seconds
       setTimeout(() => {
         setArchiveSuccessOpen(false);
-      }, 3000);
+      }, 1500);
     } catch (error) {
       console.error("Error archiving order:", error);
     }
@@ -171,7 +171,7 @@ export const OrderManagement: React.FC = () => {
               variant='standard'
             />
           </Box>
-          <Box sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: 'calc(25% - 16px)' } }}>
+          <Box sx={{ flexGrow: 1, minWidth: { xs: 'calc(25% - 16px)' } }}>
             <TextField
               fullWidth
               type="number"
@@ -182,17 +182,18 @@ export const OrderManagement: React.FC = () => {
               variant='standard'
             />
           </Box>
-          <Box sx={{ flexGrow: 1, minWidth: { xs: '100%', sm: 'auto' } }}>
+          <Box >
             <IconButton
               type="submit"
               color="primary"
               size="large"
               aria-label="Add Item"
-              sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}
+              sx={{backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}
             >
               <AddIcon fontSize="inherit" />
             </IconButton>
           </Box>
+          {orderItems.length < 1 && <Box sx={{ flexGrow: 1, minWidth: { xs: '100%'} }}> <Typography component="h3" color="inherit">Enter some item&#x24;</Typography></Box>}
         </Box>
       </Paper>
 
@@ -204,7 +205,7 @@ export const OrderManagement: React.FC = () => {
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack sx={{ textAlign: 'left' }}>
                     <Box display="flex" alignItems="center">
-                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Location:</Typography>
+                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}><strong>Location:</strong></Typography>
                       <Typography
                         variant="body1"
                         sx={{ textAlign: 'left', mr: 1 }}
@@ -215,50 +216,17 @@ export const OrderManagement: React.FC = () => {
                         <TouchApp />
                       </IconButton>
                     </Box>
-                    <Modal open={locationModalOpen} onClose={handleCloseLocationModal}>
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: '50%',
-                          left: '50%',
-                          transform: 'translate(-50%, -50%)',
-                          bgcolor: 'background.paper',
-                          boxShadow: 24,
-                          p: 4,
-                          borderRadius: 2,
-                          minWidth: 300,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <TextField
-                          label="Location"
-                          value={locationInput}
-                          onChange={e => setLocationInput(e.target.value)}
-                          autoFocus
-                          sx={{ mb: 2, width: '100%' }}
-                        />
-                        <Button
-                          variant="contained"
-                          onClick={handleLocationModalOk}
-                          sx={{ alignSelf: 'center' }}
-                        >
-                          OK
-                        </Button>
-                      </Box>
-                    </Modal>
                     <Box display="flex" alignItems="center">
-                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Total:</Typography>
+                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}><strong>Total: </strong></Typography>
                       <Typography variant="body1" sx={{ textAlign: 'left' }}>{Number(summary.totalsByCurrency[currency] || 0).toFixed(2)} {currency}</Typography>
                     </Box>
                     <Box display="flex" alignItems="center">
-                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Items:</Typography>
+                      <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}><strong>Items:</strong></Typography>
                       <Typography variant="body1" sx={{ textAlign: 'left' }}>{summary.itemCount}</Typography>
                     </Box>
                     {summary.lastOrder && (
                       <Box display="flex" alignItems="flex-start">
-                        <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}>Last order:</Typography>
+                        <Typography variant="subtitle1" sx={{ textAlign: 'left', mr: 1 }}><strong>Last order:</strong></Typography>
                         <Typography variant="body1" sx={{ textAlign: 'left' }}>
                             {summary.lastOrder.itemName} at {summary.lastOrder.currentTime}
                           </Typography>
@@ -286,7 +254,7 @@ export const OrderManagement: React.FC = () => {
           </Card>
 
           <Stack spacing={2}>
-            {orderItems.map((item) => (
+            {[...orderItems].reverse().map((item) => (
               <Paper 
                 key={item.id} 
                 sx={{ 
@@ -299,7 +267,7 @@ export const OrderManagement: React.FC = () => {
               >
                 <Stack>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ flexGrow: 1 }}>
+                    <Box sx={{ flexGrow: 1}}>
                         <Typography variant="subtitle1">
                           {item.itemName}
                         </Typography>
@@ -307,8 +275,8 @@ export const OrderManagement: React.FC = () => {
                           {item.itemCalculatedAmount} x {item.itemInitialPrice} = {item.itemCalculatedPrice}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">{item.currentTime}</Typography>
-                      </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center'}}>
                     <Stack spacing={2}>
                       {expandedItems[item.id!] ? (
                         <ExpandLessIcon fontSize="small" />
@@ -319,41 +287,29 @@ export const OrderManagement: React.FC = () => {
                     </Box>
                   </Box>
                   
-                  <Collapse in={expandedItems[item.id!]} timeout="auto" unmountOnExit>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between" sx={{ mt: 1 }}>
-                      <Box sx={{ flexGrow: 1 }}>
-                      </Box>
+                  <Collapse in={expandedItems[item.id!]} timeout="auto">
                       <Box onClick={(e) => e.stopPropagation()}>
-                        <ButtonGroup size="small">
-                          <IconButton onClick={() => handlers.handleDecrementAmount(item)} size="small">
-                            <RemoveIcon />
+                        <Stack sx={{ paddingTop: '1.5rem'}} direction={{ xs: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
+                          <IconButton onClick={() => handlers.handleIncrementAmount(item)} size="small" sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}>
+                            <AddIcon fontSize='small'/>
                           </IconButton>
-                          <Typography sx={{ px: 1, display: 'flex', alignItems: 'center' }}>
-                            {item.itemCalculatedAmount}
-                          </Typography>
-                          <IconButton onClick={() => handlers.handleIncrementAmount(item)} size="small">
-                            <AddIcon />
+                          <IconButton onClick={() => handlers.handleDecrementAmount(item)} size="small" sx={{ backgroundColor: 'error.main', color: 'white', '&:hover': { backgroundColor: 'error.dark' } }}>
+                            <RemoveIcon fontSize='small'  />
                           </IconButton>
-                        </ButtonGroup>
-                      </Box>
-                      <Box onClick={(e) => e.stopPropagation()}>
-                        <ButtonGroup size="small">
-                          <IconButton onClick={() => handleOpenNameModal(item)} size="small">
-                            <EditIcon />
+                          <IconButton onClick={() => handleOpenNameModal(item)} size="small" sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}>
+                            <TextFieldsIcon fontSize='small' />
                           </IconButton>
-                          <IconButton onClick={(e) => {e.stopPropagation(); handleOpenPriceModal(item);}} size="small">
-                            <EditIcon />
+                          <IconButton onClick={(e) => {e.stopPropagation(); handleOpenPriceModal(item);}} size="small" sx={{ backgroundColor: 'primary.main', color: 'white', '&:hover': { backgroundColor: 'primary.dark' } }}>
+                            <AttachMoneyIcon fontSize='small' />
                           </IconButton>
                           <IconButton 
                             onClick={() => handlers.handleDeleteItem(item.id!)}
-                            color="error"
-                            size="small"
+                            size="small" sx={{ backgroundColor: 'error.main', color: 'white', '&:hover': { backgroundColor: 'error.dark' } }}
                           >
-                            <DeleteIcon />
+                            <DeleteIcon fontSize='small' />
                           </IconButton>
-                        </ButtonGroup>
+                        </Stack>
                       </Box>
-                    </Stack>
                   </Collapse>
                 </Stack>
               </Paper>
@@ -429,6 +385,40 @@ export const OrderManagement: React.FC = () => {
           <Button
             variant="contained"
             onClick={handlePriceModalOk}
+            sx={{ alignSelf: 'center' }}
+          >
+            OK
+          </Button>
+        </Box>
+      </Modal>
+
+      <Modal open={locationModalOpen} onClose={handleCloseLocationModal}>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            minWidth: 300,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <TextField
+            label="Location"
+            value={locationInput}
+            onChange={e => setLocationInput(e.target.value)}
+            autoFocus
+            sx={{ mb: 2, width: '100%' }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleLocationModalOk}
             sx={{ alignSelf: 'center' }}
           >
             OK
