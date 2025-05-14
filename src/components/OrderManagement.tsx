@@ -411,12 +411,12 @@ export const OrderManagement: React.FC = () => {
           <Box sx={{ flexGrow: 1, minWidth: { xs: 'calc(25% - 16px)' } }}>
             <TextField
               fullWidth
-              type="number"
               name="itemInitialPrice"
               label="Price"
               required
               size="small"
               variant='standard'
+              inputMode="decimal"
             />
           </Box>
           <Box >
