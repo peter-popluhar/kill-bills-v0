@@ -45,7 +45,7 @@ export const Archive: React.FC = () => {
 
   return (
     <Stack spacing={3}>
-      {archivedOrders.map((order: ArchivedOrder) => (
+      {[...archivedOrders].reverse().map((order: ArchivedOrder) => (
         <Paper key={order.archiveId || order.id} sx={{ p: 2, mb: 2 }}>
           <Stack spacing={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center">

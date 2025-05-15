@@ -417,6 +417,7 @@ export const OrderManagement: React.FC = () => {
               size="small"
               variant='standard'
               inputMode="decimal"
+              type='numeric'
             />
           </Box>
           <Box >
