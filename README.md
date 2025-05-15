@@ -2,6 +2,8 @@
 
 A React application that demonstrates Firebase Realtime Database integration.
 
+*** Disclaimer - app created with #vibecoding, github co-pilot and prompts.
+
 ## Setup
 
 1. Install dependencies:
