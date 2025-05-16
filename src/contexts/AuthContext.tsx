@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, signInWithPopup, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
-import { ref, get } from 'firebase/database';
-import { database } from '../firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -27,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  // Check authorization by attempting to read from the database
+  // Simplified authorization check that doesn't use database read or domain checks
   const checkAuthorization = async (user: User | null) => {
     if (!user) {
       setIsAuthorized(false);
@@ -35,14 +33,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Try to read from the database - this will fail if not authorized
-      const testRef = ref(database, 'orderItems');
-      await get(testRef);
-      setIsAuthorized(true);
+      // Simply check if the user has a verified email
+      // This uses data already available in the authentication response
+      const isVerified = user.emailVerified;
+      
+      // Set authorization status based on email verification
+      setIsAuthorized(isVerified);
+      
+      // If not authorized, sign out
+      if (!isVerified) {
+        console.log('User email is not verified');
+        await signOut(auth);
+      }
     } catch (error) {
       console.error('Authorization check failed:', error);
       setIsAuthorized(false);
-      // Sign out if not authorized
       await signOut(auth);
     }
   };
@@ -88,4 +93,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {!loading && children}
     </AuthContext.Provider>
   );
-} 
+}

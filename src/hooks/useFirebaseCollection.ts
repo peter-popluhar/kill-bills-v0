@@ -6,7 +6,7 @@ import { useLoadingError } from './useLoadingError';
 
 interface FirebaseCollectionOptions<T> {
   collectionPath: string;
-  transformData?: (data: any) => T[];
+  transformData?: (data: Record<string, unknown>) => T[];
   filterByUser?: boolean;
 }
 
@@ -35,8 +35,16 @@ export function useFirebaseCollection<T extends { id?: string; user?: string }>(
   const { isLoading, error, startLoading, stopLoading, setError } = useLoadingError();
   const { user, isAuthorized } = useAuth();
   const prevDataRef = useRef<T[]>([]);
+  
+  // Create a cached reference to the collection path
+  const collectionRef = useRef<ReturnType<typeof ref> | null>(null);
 
   const { collectionPath, transformData, filterByUser = true } = options;
+
+  // Update the cached reference when collection path changes
+  useEffect(() => {
+    collectionRef.current = ref(database, collectionPath);
+  }, [collectionPath]);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -47,9 +55,8 @@ export function useFirebaseCollection<T extends { id?: string; user?: string }>(
     }
 
     startLoading();
-    const collectionRef = ref(database, collectionPath);
     
-    const unsubscribe = onValue(collectionRef, 
+    const unsubscribe = onValue(collectionRef.current!, 
       (snapshot: DataSnapshot) => {
         if (!isSubscribed) return;
 
@@ -61,9 +68,9 @@ export function useFirebaseCollection<T extends { id?: string; user?: string }>(
             if (transformData) {
               processedData = transformData(rawData);
             } else {
-              processedData = Object.entries(rawData).map(([id, value]: [string, any]) => ({
+              processedData = Object.entries(rawData).map(([id, value]) => ({
                 id,
-                ...value
+                ...(value as Record<string, unknown>)
               })) as T[];
             }
 
@@ -102,8 +109,7 @@ export function useFirebaseCollection<T extends { id?: string; user?: string }>(
     if (!user || !isAuthorized) return;
 
     try {
-      const collectionRef = ref(database, collectionPath);
-      const newRef = push(collectionRef);
+      const newRef = push(collectionRef.current!);
       await set(newRef, {
         ...item,
         user: user.email
@@ -142,8 +148,7 @@ export function useFirebaseCollection<T extends { id?: string; user?: string }>(
     if (!user || !isAuthorized || !data.length) return;
 
     try {
-      const collectionRef = ref(database, collectionPath);
-      await remove(collectionRef);
+      await remove(collectionRef.current!);
     } catch (error) {
       setError(error instanceof Error ? error : new Error('Error removing all items'));
       throw error;
@@ -161,4 +166,4 @@ export function useFirebaseCollection<T extends { id?: string; user?: string }>(
       removeAll
     }
   };
-} 
+}

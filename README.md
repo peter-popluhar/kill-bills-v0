@@ -1,8 +1,45 @@
 # Kill Bills v0
 
-A React application that demonstrates Firebase Realtime Database integration.
+## AI-Assisted Development
+This application was created using AI tools including GitHub Copilot and ChatGPT. The development process leveraged AI prompting to generate code, refine architecture, and implement best practices. 
 
-*** Disclaimer - app created with #vibecoding, github co-pilot and prompts.
+## About the Application
+Kill Bills is a bill management application designed to help users track shared expenses and manage order items. The app allows users to:
+
+- Create and manage items with prices
+- Track order quantities
+- Manage location information for bills
+- Automatically calculate totals
+- Convert between currencies (EUR/CZK)
+- Archive completed bills for future reference
+
+The application provides real-time updates and synchronization across devices, making it perfect for roommates, friends, or colleagues who need to split expenses.
+
+## Technologies & Libraries
+
+### Core Technologies
+- **React 18** - Frontend UI library
+- **TypeScript** - Static typing for improved code quality
+- **Firebase** - Backend services including:
+  - Realtime Database for data storage
+  - Authentication for user management
+- **Vite** - Fast build tooling and development server
+
+### UI Components & Styling
+- **Material UI (MUI)** - Component library with responsive design
+- **MUI Icons** - Icon set for the interface
+
+### State Management & Hooks
+- Custom React hooks for:
+  - Firebase data management
+  - Currency conversion
+  - Modal controls
+  - Error handling
+
+### Additional Features
+- Currency conversion API integration
+- Responsive design for mobile and desktop
+- Dark/light theme support
 
 ## Setup
 
@@ -64,11 +101,3 @@ For production, implement more restrictive rules based on your authentication an
 - `src/firebase.js` - Firebase configuration and initialization
 - `src/App.js` - Main React component with Firebase integration
 - `src/App.css` - Styling for the application
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request

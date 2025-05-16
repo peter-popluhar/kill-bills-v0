@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Box, Tab, Tabs, Badge, RadioGroup, FormControlLabel, Radio, FormLabel, FormControl, Paper } from '@mui/material';
+import { Box, Tab, Tabs, Badge, Paper } from '@mui/material';
 import { OrderManagement } from './OrderManagement';
 import { Archive } from './Archive';
 import { useArchiveManagement } from '../hooks/useArchiveManagement';
-import { useThemeMode } from '../contexts/ThemeModeContext';
-import { useCurrency } from '../contexts/CurrencyContext';
+import { SettingsThemeSwitcher } from './SettingsThemeSwitcher';
+import { SettingsCurrencySwitcher } from './SettingsCurrencySwitcher';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -12,9 +12,7 @@ interface TabPanelProps {
   value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
   return (
     <div
       role="tabpanel"
@@ -28,7 +26,7 @@ function TabPanel(props: TabPanelProps) {
       </Box>
     </div>
   );
-}
+};
 
 function a11yProps(index: number) {
   return {
@@ -37,12 +35,12 @@ function a11yProps(index: number) {
   };
 }
 
-interface ToolbarProps {
+interface TabNavigationProps {
   value: number;
   onChange: (event: React.SyntheticEvent, newValue: number) => void;
 }
 
-export const Toolbar: React.FC<ToolbarProps> = ({ value, onChange }) => {
+export const TabNavigation: React.FC<TabNavigationProps> = ({ value, onChange }) => {
   const { archivedOrders } = useArchiveManagement();
 
   return (
@@ -92,7 +90,7 @@ export const TabLayout: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Toolbar value={value} onChange={handleChange} />
+      <TabNavigation value={value} onChange={handleChange} />
       <TabPanel value={value} index={0}>
         <OrderManagement />
       </TabPanel>
@@ -110,40 +108,3 @@ export const TabLayout: React.FC = () => {
     </Box>
   );
 };
-
-const SettingsThemeSwitcher: React.FC = () => {
-  const { mode, setMode } = useThemeMode();
-  return (
-    <FormControl component="fieldset">
-      <FormLabel component="legend">Theme</FormLabel>
-      <RadioGroup
-        row
-        value={mode}
-        onChange={e => setMode(e.target.value as 'system' | 'light' | 'dark')}
-        name="theme-mode"
-      >
-        <FormControlLabel value="light" control={<Radio />} label="Light" />
-        <FormControlLabel value="dark" control={<Radio />} label="Dark" />
-        <FormControlLabel value="system" control={<Radio />} label="System" />
-      </RadioGroup>
-    </FormControl>
-  );
-};
-
-const SettingsCurrencySwitcher: React.FC = () => {
-  const { currency, setCurrency } = useCurrency();
-  return (
-    <FormControl component="fieldset" sx={{ mt: 4 }}>
-      <FormLabel component="legend">Currency</FormLabel>
-      <RadioGroup
-        row
-        value={currency}
-        onChange={e => setCurrency(e.target.value as 'CZK' | 'EUR')}
-        name="currency-mode"
-      >
-        <FormControlLabel value="CZK" control={<Radio />} label="CZK" />
-        <FormControlLabel value="EUR" control={<Radio />} label="EUR" />
-      </RadioGroup>
-    </FormControl>
-  );
-}; 

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { database } from '../firebase';
 import { ref, push, set, update } from 'firebase/database';
 import { OrderItem } from '../types/OrderItem';
@@ -16,14 +16,11 @@ interface OrderSummary {
 
 export interface UseOrderManagementReturn {
   orderItems: OrderItem[];
-  editingItem: string | null;
-  editingLocation: boolean;
   isLoading: boolean;
   error: Error | null;
   summary: OrderSummary;
   handlers: {
     handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-    handleUpdateItem: (itemId: string, updates: Partial<OrderItem>) => void;
     handleIncrementAmount: (item: OrderItem) => void;
     handleDecrementAmount: (item: OrderItem) => void;
     handleNameChange: (item: OrderItem, newName: string) => void;
@@ -32,17 +29,11 @@ export interface UseOrderManagementReturn {
     handleDeleteItem: (itemId: string) => void;
     handleDeleteOrder: () => void;
     handleArchiveOrder: () => void;
-    setEditingItem: (id: string | null) => void;
-    setEditingLocation: (isEditing: boolean) => void;
-    resetForm: () => void;
   };
 }
 
 export function useOrderManagement(): UseOrderManagementReturn {
-  const [editingItem, setEditingItem] = useState<string | null>(null);
-  const [editingLocation, setEditingLocation] = useState(false);
   const [manualLastOrder, setManualLastOrder] = useState<OrderItem | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
   const { user, isAuthorized } = useAuth();
   const { setError } = useLoadingError();
@@ -56,16 +47,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
   } = useFirebaseCollection<OrderItem>({
     collectionPath: 'orderItems'
   });
-
-  const resetForm = () => {
-    if (formRef.current) {
-      formRef.current.reset();
-      const currencySelect = formRef.current.querySelector('select[name="currency"]') as HTMLSelectElement;
-      if (currencySelect) {
-        currencySelect.value = 'CZK';
-      }
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -200,7 +181,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }).then(() => {
       // Update manual last order immediately
       setManualLastOrder(updatedItem);
-      setEditingItem(null);
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating item name'));
     });
@@ -228,7 +208,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     }).then(() => {
       // Update manual last order immediately
       setManualLastOrder(updatedItem);
-      setEditingItem(null);
     }).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating item price'));
     });
@@ -246,7 +225,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
     update(itemsRef, updates).catch((error) => {
       setError(error instanceof Error ? error : new Error('Error updating location'));
     });
-    setEditingLocation(false);
   };
 
   const handleArchiveOrder = async () => {
@@ -322,15 +300,12 @@ export function useOrderManagement(): UseOrderManagementReturn {
 
   return {
     orderItems,
-    editingItem,
-    editingLocation,
     isLoading,
     error,
     // Include lastUpdateTimestamp in dependency chain to trigger recalculation
     summary: calculateSummary(), 
     handlers: {
       handleSubmit,
-      handleUpdateItem: updateItem,
       handleIncrementAmount,
       handleDecrementAmount,
       handleNameChange,
@@ -339,9 +314,6 @@ export function useOrderManagement(): UseOrderManagementReturn {
       handleDeleteItem: removeItem,
       handleDeleteOrder: removeAll,
       handleArchiveOrder,
-      setEditingItem,
-      setEditingLocation,
-      resetForm
     }
   };
 }

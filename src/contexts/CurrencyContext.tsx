@@ -10,6 +10,10 @@ interface CurrencyContextProps {
   setCurrency: (currency: Currency) => void;
 }
 
+interface OrderItem {
+  currency?: Currency;
+}
+
 const CurrencyContext = createContext<CurrencyContextProps | undefined>(undefined);
 
 export const useCurrency = () => {
@@ -36,7 +40,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const itemsArray = Object.values(items);
         if (itemsArray.length > 0) {
           // Get the first item's currency (they should all have the same currency)
-          const firstItem = itemsArray[0] as any;
+          const firstItem = itemsArray[0] as OrderItem;
           if (firstItem.currency && (firstItem.currency === 'EUR' || firstItem.currency === 'CZK')) {
             setCurrencyState(firstItem.currency);
           }
@@ -62,7 +66,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     onValue(orderItemsRef, (snapshot) => {
       if (snapshot.exists()) {
         const items = snapshot.val();
-        const updates: Record<string, any> = {};
+        const updates: Record<string, Currency> = {};
         
         // Create updates for each item's currency
         Object.keys(items).forEach(itemId => {
